@@ -45,7 +45,6 @@ def main(args):
 	print("DATASET_DIRECTORY: " + str(DATASET_DIRECTORY))
 	
 	makeDirectories()
-
 	
 	print("Creating file structure...")
 	createFileStructure(INTERESTING_DIRECTORY, DATASET_COPY_FOLDER_INT)
@@ -54,9 +53,6 @@ def main(args):
 	
 	interestingFNames = getListOfAnimalPicsInOneClass(DATASET_COPY_FOLDER_INT)
 	notInterestingFNames = getListOfAnimalPicsInOneClass(DATASET_COPY_FOLDER_NOT)
-	
-	#use the tensorflow api to load the data from the base folder.
-	#DATASET_COPY_FOLDER
 	
 	#These could change later
 	img_height = 100
@@ -69,10 +65,14 @@ def main(args):
 	train_ds, val_ds, test_ds = createAnimalsDataset(DATASET_COPY_FOLDER, img_height, img_width, batch_size)
 	print("Done!")
 	
+	
+	#Might not be super useful but it's possible
+	#https://www.tensorflow.org/api_docs/python/tf/data/experimental/save
 	print("Saving datasets...")
-	tf.data.experimental.save(train_ds, TRAIN_SAVE_DIRECTORY)
-	tf.data.experimental.save(val_ds, VAL_SAVE_DIRECTORY)
-	tf.data.experimental.save(test_ds, TEST_SAVE_DIRECTORY)
+	# ~ tf.data.experimental.save(train_ds, TRAIN_SAVE_DIRECTORY)
+	# ~ tf.data.experimental.save(val_ds, VAL_SAVE_DIRECTORY)
+	# ~ tf.data.experimental.save(test_ds, TEST_SAVE_DIRECTORY)
+	print("Disabled for now!")
 	print("Done!")
 
 	
@@ -130,8 +130,6 @@ def createAnimalsDataset(baseDirectory, img_height, img_width, batch_size):
 		image_size=(img_height, img_width),
 		batch_size=batch_size)
 
-	class_names = train_ds.class_names
-	print("class names: " + str(class_names))
 	
 
 	if TEST_PRINTING:
@@ -144,16 +142,39 @@ def createAnimalsDataset(baseDirectory, img_height, img_width, batch_size):
 				plt.axis("off")
 			plt.show()
 
+	class_names = train_ds.class_names
+	print("class names: " + str(class_names))
 
 	# ~ normalization_layer = tf.keras.layers.Rescaling(1./255) #for new versions
 	normalization_layer = tf.keras.layers.experimental.preprocessing.Rescaling(1./255) #for old versions
 	
-	normalized_train_ds = train_ds.map(lambda x, y: (normalization_layer(x), y))
-	normalized_val_ds = val_ds.map(lambda x, y: (normalization_layer(x), y))
+	n_train_ds = train_ds.map(lambda x, y: (normalization_layer(x), y))
+	n_val_ds = val_ds.map(lambda x, y: (normalization_layer(x), y))
 
-	normalized_val_ds, normalized_test_ds = createTestSet(normalized_val_ds)
+	n_val_ds, n_test_ds = createTestSet(n_val_ds)
+	
+	#names change
+	AUTOTUNE = tf.data.AUTOTUNE
+	n_train_ds = n_train_ds.prefetch(buffer_size=AUTOTUNE)
+	n_val_ds = n_val_ds.prefetch(buffer_size=AUTOTUNE)
+	n_test_ds = n_test_ds.prefetch(buffer_size=AUTOTUNE)
 
-	return normalized_train_ds, normalized_val_ds, normalized_test_ds
+	#could do augmentation here on train and val, leaving test unaugmented.
+	#causing errors. skipped for now.
+	#I think you have to uncouple the dataset from the extra data that I added in the normalization and prefetch steps
+	#see : https://www.tensorflow.org/text/tutorials/transformer
+	# ~ flippyBoy = tf.keras.layers.experimental.preprocessing.RandomFlip("horizontal")
+	# ~ rotate = tf.keras.layers.experimental.preprocessing.RandomRotation(0.2)
+	
+	
+	# ~ n_train_ds = rotate(n_train_ds)
+	# ~ n_val_ds = rotate(n_val_ds)
+	# ~ n_test_ds = rotate(n_test_ds)
+	
+	
+
+
+	return n_train_ds, n_val_ds, n_test_ds
 
 
 def createFileStructure(baseDirSource, destination):
