@@ -14,21 +14,16 @@ import os
 import skimage
 import shutil
 import matplotlib.pyplot as plt
+from pathlib import Path
 
 import numpy as np
-import PIL
-import PIL.Image
 import tensorflow as tf
-# ~ import tensorflow_datasets as tfds
 
 print("Done!")
 
 DATASET_DIRECTORY = "./ftp.wsdot.wa.gov/public/I90Snoq/Biology/thermal/614s/"
 INTERESTING_DIRECTORY = "./ftp.wsdot.wa.gov/public/I90Snoq/Biology/thermal/614s/interesting/"
 NOT_INTERESTING_DIRECTORY = "./ftp.wsdot.wa.gov/public/I90Snoq/Biology/thermal/614s/not interesting/"
-# DATASET_DIRECTORY = "../aminals/ftp.wsdot.wa.gov/public/I90Snoq/Biology/thermal/614s/"
-# INTERESTING_DIRECTORY = "../aminals/ftp.wsdot.wa.gov/public/I90Snoq/Biology/thermal/614s/interesting/"
-# NOT_INTERESTING_DIRECTORY = "../aminals/ftp.wsdot.wa.gov/public/I90Snoq/Biology/thermal/614s/not interesting/"
 
 DATASET_COPY_FOLDER = "./tmpdata/"
 DATASET_COPY_FOLDER_INT = "./tmpdata/int/"
@@ -44,15 +39,15 @@ CLASS_NOT_INTERESTING = 1
 
 TEST_PRINTING = False
 
+IS_DOWNLOAD_PICTURES = False
+HIDDEN_DOWNLOAD_FLAG_FILE = ".isnotfirstdownload"
+
 
 def main(args):
-	print("hey")
+	print("Hello! This is the Animal Crossing Dataset Loader!")
+	makeDirectories()
 	checkArgs(args)
 	print("DATASET_DIRECTORY: " + str(DATASET_DIRECTORY))
-	
-	retrieveImages()
-	
-	makeDirectories()
 
 	print("Creating file structure...")
 	createFileStructure(INTERESTING_DIRECTORY, DATASET_COPY_FOLDER_INT)
@@ -105,14 +100,26 @@ def makeDirectories():
 		os.mkdir(VAL_SAVE_DIRECTORY)
 	if not os.path.isdir(TEST_SAVE_DIRECTORY):
 		os.mkdir(TEST_SAVE_DIRECTORY)
+	
+	if not os.path.isdir(DATASET_DIRECTORY):
+		os.makedirs(DATASET_DIRECTORY)
 
 # Retrieves the images if they're not here
 # note: does not UPDATE images, need to implement that 
 def retrieveImages():
-    if not os.path.isdir(DATASET_DIRECTORY):
         print("Retrieving images...")
         os.system("wget -e robots=off -r -np --mirror https://ftp.wsdot.wa.gov/public/I90Snoq/Biology/thermal/")
         print("Done!")
+
+#Checks if a flag file is in place to determine if the dataset should download from the ftp server.
+def isDownloadedFlagFileSet():
+	if not os.path.isfile(HIDDEN_DOWNLOAD_FLAG_FILE):
+		Path(HIDDEN_DOWNLOAD_FLAG_FILE).touch(exist_ok=True)
+
+		return False
+	
+	return True
+	
 
 #Takes some images from the validation set and sets the aside for the test set.
 def createTestSet(val_ds):
@@ -257,10 +264,16 @@ def getListOfDirNames(baseDirectory):
 
 
 def checkArgs(args):
+	#for people not using a terminal; they can set the flag.
+	if IS_DOWNLOAD_PICTURES:
+		retrieveImages()
 	if len(args) > 1:
-		global DATASET_DIRECTORY
-		DATASET_DIRECTORY = args[1]
-
+		downloadArgs = ["--download", "-download", "download", "d", "-d", "--d"]
+		if not set(downloadArgs).isdisjoint(args):
+			retrieveImages()
+	#for the first time user
+	if not isDownloadedFlagFileSet():
+		retrieveImages()
 
 if __name__ == '__main__':
 	import sys

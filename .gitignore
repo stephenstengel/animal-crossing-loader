@@ -1,2 +1,4 @@
 # do not backup data
 ftp.wsdot.wa.gov
+.isnotfirstdownload
+tmpdata
