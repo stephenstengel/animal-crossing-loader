@@ -198,9 +198,9 @@ def createAnimalsDataset(baseDirectory, img_height, img_width, batch_size):
 def createFileStructure(baseDirSource, destination):
 	copyDatasetToTMP(baseDirSource, destination)
 	
-	dirNames = getListOfDirNames(destination)
-	for dName in dirNames:
-		copyDatasetToTMP(dName, destination)
+	# ~ dirNames = getListOfDirNames(destination)
+	# ~ for dName in dirNames:
+		# ~ copyDatasetToTMP(dName, destination)
 	
 
 def copyDatasetToTMP(baseDirSource, destination):
@@ -259,17 +259,21 @@ def getListOfDirNames(baseDirectory):
 
 
 def checkArgs(args):
+	shouldIRetrieveImages = False
+
 	#for people not using a terminal; they can set the flag.
 	if IS_DOWNLOAD_PICTURES:
-		retrieveImages()
+		shouldIRetrieveImages = True
 	if len(args) > 1:
 		downloadArgs = ["--download", "-download", "download", "d", "-d", "--d"]
 		if not set(downloadArgs).isdisjoint(args):
-			retrieveImages()
+			shouldIRetrieveImages = True
 	#for the first time user
 	if not isDownloadedFlagFileSet():
-		retrieveImages()
+		shouldIRetrieveImages = True
 
+	if shouldIRetrieveImages:
+		retrieveImages()
 
 if __name__ == '__main__':
 	import sys
