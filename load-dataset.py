@@ -15,6 +15,7 @@ import skimage
 import shutil
 import matplotlib.pyplot as plt
 from pathlib import Path
+import subprocess
 
 import numpy as np
 import tensorflow as tf
@@ -46,7 +47,7 @@ HIDDEN_DOWNLOAD_FLAG_FILE = ".isnotfirstdownload"
 def main(args):
 	print("Hello! This is the Animal Crossing Dataset Loader!")
 	makeDirectories()
-	checkArgs(args)
+	wgetPID = checkArgs(args)
 	print("DATASET_DIRECTORY: " + str(DATASET_DIRECTORY))
 
 	print("Creating file structure...")
@@ -56,6 +57,10 @@ def main(args):
 	
 	interestingFNames = getListOfAnimalPicsInOneClass(DATASET_COPY_FOLDER_INT)
 	notInterestingFNames = getListOfAnimalPicsInOneClass(DATASET_COPY_FOLDER_NOT)
+	
+	#This is only useful if the files are already downloaded. Waits for
+	#wget to finish updating after finishing createFileStructure and getting names.
+	waitForDownloadToFinish(wgetPID)
 	
 	#These could change later
 	img_height = 100
@@ -107,9 +112,14 @@ def makeDirectories():
 # Retrieves the images if they're not here
 # note: does not UPDATE images, need to implement that 
 def retrieveImages():
-        print("Retrieving images...")
-        os.system("wget -e robots=off -r -np --mirror https://ftp.wsdot.wa.gov/public/I90Snoq/Biology/thermal/")
-        print("Done!")
+	print("Retrieving images...")
+	# ~ wgetPID = subprocess.Popen(["ogg123", "james-brown-dead.ogg", "-r", "-q"])
+	wgetPID = subprocess.Popen(["wget", "-e", "robots=off", "-r", "-np", "--mirror", "https://ftp.wsdot.wa.gov/public/I90Snoq/Biology/thermal/"])
+	
+	# ~ os.system("wget -e robots=off -r -np --mirror https://ftp.wsdot.wa.gov/public/I90Snoq/Biology/thermal/")
+	print("Done!")
+	
+	return wgetPID
 
 #Checks if a flag file is in place to determine if the dataset should download from the ftp server.
 def isDownloadedFlagFileSet():
@@ -119,7 +129,15 @@ def isDownloadedFlagFileSet():
 		return False
 	
 	return True
-	
+
+
+#Waits for wget to finish. wgetPID is the process id of the wget subprocess.
+#Not sure if it will work on windows!!!!!!!!!!!!!!!
+def waitForDownloadToFinish(wgetPID):
+	if wgetPID is not None:
+		wgetPID.wait()
+		print("  --  Finished Downloading Dataset  --  ")
+	print("wget done")
 
 #Takes some images from the validation set and sets the aside for the test set.
 def createTestSet(val_ds):
@@ -264,16 +282,19 @@ def getListOfDirNames(baseDirectory):
 
 
 def checkArgs(args):
+	wgetPID = None
 	#for people not using a terminal; they can set the flag.
 	if IS_DOWNLOAD_PICTURES:
-		retrieveImages()
+		wgetPID = retrieveImages()
 	if len(args) > 1:
 		downloadArgs = ["--download", "-download", "download", "d", "-d", "--d"]
 		if not set(downloadArgs).isdisjoint(args):
-			retrieveImages()
+			wgetPID = retrieveImages()
 	#for the first time user
 	if not isDownloadedFlagFileSet():
-		retrieveImages()
+		wgetPID = retrieveImages()
+	
+	return wgetPID
 
 if __name__ == '__main__':
 	import sys
