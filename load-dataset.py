@@ -26,7 +26,7 @@ INTERESTING_DIRECTORY = "./ftp.wsdot.wa.gov/public/I90Snoq/Biology/thermal/614s/
 NOT_INTERESTING_DIRECTORY = "./ftp.wsdot.wa.gov/public/I90Snoq/Biology/thermal/614s/not interesting/"
 
 DATASET_COPY_FOLDER = "./tmpdata/"
-DATASET_COPY_FOLDER_INT = "./tmpdata/int/"
+DATASET_COPY_FOLDER_INT = "./tmpdata/interesting/"
 DATASET_COPY_FOLDER_NOT = "./tmpdata/not/"
 
 DATASET_SAVE_DIR = "./dataset/"
