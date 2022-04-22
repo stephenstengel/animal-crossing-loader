@@ -8,6 +8,8 @@
 #  Script to load the dataset into file form for easy importing.
 #  
 
+print("Loading imports...")
+
 import os
 import skimage
 import shutil
@@ -19,9 +21,15 @@ import PIL.Image
 import tensorflow as tf
 # ~ import tensorflow_datasets as tfds
 
-DATASET_DIRECTORY = "../aminals/ftp.wsdot.wa.gov/public/I90Snoq/Biology/thermal/614s/"
-INTERESTING_DIRECTORY = "../aminals/ftp.wsdot.wa.gov/public/I90Snoq/Biology/thermal/614s/interesting/"
-NOT_INTERESTING_DIRECTORY = "../aminals/ftp.wsdot.wa.gov/public/I90Snoq/Biology/thermal/614s/not interesting/"
+print("Done!")
+
+DATASET_DIRECTORY = "./ftp.wsdot.wa.gov/public/I90Snoq/Biology/thermal/614s/"
+INTERESTING_DIRECTORY = "./ftp.wsdot.wa.gov/public/I90Snoq/Biology/thermal/614s/interesting/"
+NOT_INTERESTING_DIRECTORY = "./ftp.wsdot.wa.gov/public/I90Snoq/Biology/thermal/614s/not interesting/"
+# DATASET_DIRECTORY = "../aminals/ftp.wsdot.wa.gov/public/I90Snoq/Biology/thermal/614s/"
+# INTERESTING_DIRECTORY = "../aminals/ftp.wsdot.wa.gov/public/I90Snoq/Biology/thermal/614s/interesting/"
+# NOT_INTERESTING_DIRECTORY = "../aminals/ftp.wsdot.wa.gov/public/I90Snoq/Biology/thermal/614s/not interesting/"
+
 DATASET_COPY_FOLDER = "./tmpdata/"
 DATASET_COPY_FOLDER_INT = "./tmpdata/int/"
 DATASET_COPY_FOLDER_NOT = "./tmpdata/not/"
@@ -30,8 +38,6 @@ DATASET_SAVE_DIR = "./dataset/"
 TRAIN_SAVE_DIRECTORY = "./dataset/train/"
 VAL_SAVE_DIRECTORY = "./dataset/val/"
 TEST_SAVE_DIRECTORY = "./dataset/test/"
-
-
 
 CLASS_INTERESTING = 0
 CLASS_NOT_INTERESTING = 1
@@ -44,8 +50,10 @@ def main(args):
 	checkArgs(args)
 	print("DATASET_DIRECTORY: " + str(DATASET_DIRECTORY))
 	
-	makeDirectories()
+	retrieveImages()
 	
+	makeDirectories()
+
 	print("Creating file structure...")
 	createFileStructure(INTERESTING_DIRECTORY, DATASET_COPY_FOLDER_INT)
 	createFileStructure(NOT_INTERESTING_DIRECTORY, DATASET_COPY_FOLDER_NOT)
@@ -80,7 +88,6 @@ def main(args):
 	return 0
 
 
-
 #There is an easier way.
 def makeDirectories():
 	if not os.path.isdir(DATASET_COPY_FOLDER):
@@ -99,6 +106,13 @@ def makeDirectories():
 	if not os.path.isdir(TEST_SAVE_DIRECTORY):
 		os.mkdir(TEST_SAVE_DIRECTORY)
 
+# Retrieves the images if they're not here
+# note: does not UPDATE images, need to implement that 
+def retrieveImages():
+    if not os.path.isdir(DATASET_DIRECTORY):
+        print("Retrieving images...")
+        os.system("wget -e robots=off -r -np --mirror https://ftp.wsdot.wa.gov/public/I90Snoq/Biology/thermal/")
+        print("Done!")
 
 #Takes some images from the validation set and sets the aside for the test set.
 def createTestSet(val_ds):
