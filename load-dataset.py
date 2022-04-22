@@ -34,13 +34,15 @@ TRAIN_SAVE_DIRECTORY = "./dataset/train/"
 VAL_SAVE_DIRECTORY = "./dataset/val/"
 TEST_SAVE_DIRECTORY = "./dataset/test/"
 
+HIDDEN_DOWNLOAD_FLAG_FILE = ".isnotfirstdownload"
+
+#unused currently because image_dataset_from_directory creates labels automatically.
 CLASS_INTERESTING = 0
 CLASS_NOT_INTERESTING = 1
 
 TEST_PRINTING = False
-
+IS_SAVE_THE_DATASETS = False
 IS_DOWNLOAD_PICTURES = False
-HIDDEN_DOWNLOAD_FLAG_FILE = ".isnotfirstdownload"
 
 
 def main(args):
@@ -57,7 +59,7 @@ def main(args):
 	interestingFNames = getListOfAnimalPicsInOneClass(DATASET_COPY_FOLDER_INT)
 	notInterestingFNames = getListOfAnimalPicsInOneClass(DATASET_COPY_FOLDER_NOT)
 	
-	#These could change later
+	#These WILL change later
 	img_height = 100
 	img_width = 100
 	# ~ img_height = 600
@@ -65,20 +67,19 @@ def main(args):
 	batch_size = 32
 
 	print("creating the datasets...")
-	train_ds, val_ds, test_ds = createAnimalsDataset(DATASET_COPY_FOLDER, img_height, img_width, batch_size)
+	train_ds, val_ds, test_ds = createAnimalsDataset(
+			DATASET_COPY_FOLDER, img_height, img_width, batch_size)
 	print("Done!")
 	
-	
-	#Might not be super useful but it's possible
-	#https://www.tensorflow.org/api_docs/python/tf/data/experimental/save
 	print("Saving datasets...")
-	# ~ tf.data.experimental.save(train_ds, TRAIN_SAVE_DIRECTORY)
-	# ~ tf.data.experimental.save(val_ds, VAL_SAVE_DIRECTORY)
-	# ~ tf.data.experimental.save(test_ds, TEST_SAVE_DIRECTORY)
-	print("Disabled for now!")
-	print("Done!")
-
-	
+	if IS_SAVE_THE_DATASETS:
+		saveDatasets(
+				train_ds, TRAIN_SAVE_DIRECTORY,
+				val_ds, VAL_SAVE_DIRECTORY,
+				test_ds, TEST_SAVE_DIRECTORY)
+		print("Done!")
+	else:
+		print("Saving disabled for now!")
 
 	return 0
 
@@ -101,15 +102,17 @@ def makeDirectories():
 	if not os.path.isdir(TEST_SAVE_DIRECTORY):
 		os.mkdir(TEST_SAVE_DIRECTORY)
 	
+	#makedirs is the easy way. It makes all the required parent folders if they don't exist.
 	if not os.path.isdir(DATASET_DIRECTORY):
 		os.makedirs(DATASET_DIRECTORY)
 
+
 # Retrieves the images if they're not here
-# note: does not UPDATE images, need to implement that 
 def retrieveImages():
         print("Retrieving images...")
         os.system("wget -e robots=off -r -np --mirror https://ftp.wsdot.wa.gov/public/I90Snoq/Biology/thermal/")
         print("Done!")
+
 
 #Checks if a flag file is in place to determine if the dataset should download from the ftp server.
 def isDownloadedFlagFileSet():
@@ -128,10 +131,15 @@ def createTestSet(val_ds):
 	val_ds = val_ds.skip(val_batches // 5)
 	
 	return val_ds, test_dataset
-	
 
 
-#Must use tf.keras.layers.Rescaling(1./255) as first layer in model !!!
+def saveDatasets(train_ds, trainDir, val_ds, valDir, test_ds, testDir):
+	tf.data.experimental.save(train_ds, trainDir)
+	tf.data.experimental.save(val_ds, valDir)
+	tf.data.experimental.save(test_ds, testDir)
+
+
+#Split into helper functions later.
 def createAnimalsDataset(baseDirectory, img_height, img_width, batch_size):
 	train_ds = tf.keras.preprocessing.image_dataset_from_directory(
 		baseDirectory,
@@ -151,8 +159,6 @@ def createAnimalsDataset(baseDirectory, img_height, img_width, batch_size):
 		image_size=(img_height, img_width),
 		batch_size=batch_size)
 
-	
-
 	if TEST_PRINTING:
 		plt.figure(figsize=(10, 10))
 		for images, labels in train_ds.take(1):
@@ -168,33 +174,24 @@ def createAnimalsDataset(baseDirectory, img_height, img_width, batch_size):
 
 	# ~ normalization_layer = tf.keras.layers.Rescaling(1./255) #for new versions
 	normalization_layer = tf.keras.layers.experimental.preprocessing.Rescaling(1./255) #for old versions
-	
 	n_train_ds = train_ds.map(lambda x, y: (normalization_layer(x), y))
 	n_val_ds = val_ds.map(lambda x, y: (normalization_layer(x), y))
 
 	n_val_ds, n_test_ds = createTestSet(n_val_ds)
-	
-	#names change
+
+	flippyBoy = tf.keras.layers.experimental.preprocessing.RandomFlip("horizontal")
+	n_train_ds = val_ds.map(lambda x, y: (flippyBoy(x), y))
+	n_val_ds = val_ds.map(lambda x, y: (flippyBoy(x), y))
+
+	myRotate = tf.keras.layers.experimental.preprocessing.RandomRotation(0.2)
+	n_train_ds = val_ds.map(lambda x, y: (myRotate(x), y))
+	n_val_ds = val_ds.map(lambda x, y: (myRotate(x), y))
+
 	AUTOTUNE = tf.data.AUTOTUNE
 	n_train_ds = n_train_ds.prefetch(buffer_size=AUTOTUNE)
 	n_val_ds = n_val_ds.prefetch(buffer_size=AUTOTUNE)
 	n_test_ds = n_test_ds.prefetch(buffer_size=AUTOTUNE)
-
-	#could do augmentation here on train and val, leaving test unaugmented.
-	#causing errors. skipped for now.
-	#I think you have to uncouple the dataset from the extra data that I added in the normalization and prefetch steps
-	#see : https://www.tensorflow.org/text/tutorials/transformer
-	# ~ flippyBoy = tf.keras.layers.experimental.preprocessing.RandomFlip("horizontal")
-	# ~ rotate = tf.keras.layers.experimental.preprocessing.RandomRotation(0.2)
 	
-	
-	# ~ n_train_ds = rotate(n_train_ds)
-	# ~ n_val_ds = rotate(n_val_ds)
-	# ~ n_test_ds = rotate(n_test_ds)
-	
-	
-
-
 	return n_train_ds, n_val_ds, n_test_ds
 
 
@@ -213,8 +210,6 @@ def copyDatasetToTMP(baseDirSource, destination):
 			shutil.copy(thisName, destination)
 		except:
 			print("copy skipping: " + str(thisName))
-
-
 
 
 def getListOfAnimalPicsInOneClass(classDir):
@@ -274,6 +269,7 @@ def checkArgs(args):
 	#for the first time user
 	if not isDownloadedFlagFileSet():
 		retrieveImages()
+
 
 if __name__ == '__main__':
 	import sys

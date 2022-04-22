@@ -1,0 +1,33 @@
+This is a script that can download, process, and save the animal images
+as a tensorflow dataset.
+
+Usage:
+	To run for the first time:
+		python3 load-dataset.py
+	
+	To update the animal pictures from the ftp server:
+		python3 load-dataset.py download
+		python3 load-dataset.py -download
+		python3 load-dataset.py --download
+		python3 load-dataset.py d
+		python3 load-dataset.py -d
+		python3 load-dataset.py --d
+	
+When run for the first time, it places a hidden file named
+".isnotfirstdownload" in the base directory so that it will skip the
+download step.
+
+
+TODO:
+Shuffle?
+
+Add a simple model and evaluate.
+
+Use transfer learning.
+
+More command line control of flags.
+
+Make file stuff windows friendly by using os.path library
+
+
+2022 Stephen Stengel <stephen.stengel@cwu> and friends

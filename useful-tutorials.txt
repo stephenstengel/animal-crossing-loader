@@ -1,0 +1,16 @@
+https://www.tensorflow.org/text/tutorials/transformer
+
+##preprocessing: note: Making preprocessing part of the model is better if using a GPU
+#Preprocessing outside of the model is better on CPU. At least for images.
+#https://keras.io/guides/preprocessing_layers/
+
+https://www.tensorflow.org/api_docs/python/tf/data/experimental/save
+
+#Needs newer tensorflow or numpy or somethin? numpy >= 1.22 tensorflow >= 2.6
+# ~ https://stackoverflow.com/questions/58479556/notimplementederror-cannot-convert-a-symbolic-tensor-2nd-target0-to-a-numpy
+
+https://machinelearningmastery.com/save-load-keras-deep-learning-models/
+
+https://www.tensorflow.org/tutorials/load_data/images
+
+https://www.tensorflow.org/tutorials/images/transfer_learning
