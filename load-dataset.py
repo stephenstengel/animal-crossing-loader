@@ -66,12 +66,12 @@ def main(args):
 	notInterestingFNames = getListOfAnimalPicsInOneClass(DATASET_COPY_FOLDER_NOT)
 	
 	#These WILL change later
-	# ~ img_height = 100
-	# ~ img_width = 100
+	img_height = 100
+	img_width = 100
 	# ~ img_height = 512
 	# ~ img_width = 512
-	img_height = 600
-	img_width = 800
+	# ~ img_height = 600
+	# ~ img_width = 800
 	batch_size = 32
 
 	print("creating the datasets...")
