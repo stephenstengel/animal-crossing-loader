@@ -14,3 +14,10 @@ https://machinelearningmastery.com/save-load-keras-deep-learning-models/
 https://www.tensorflow.org/tutorials/load_data/images
 
 https://www.tensorflow.org/tutorials/images/transfer_learning
+
+https://stackoverflow.com/questions/71638403/how-do-i-use-tf-keras-preprocessing-image-dataset-from-directory-to-create-a-d
+
+https://cs230.stanford.edu/blog/tensorflow/
+https://cs230.stanford.edu/blog/datapipeline/#best-practices
+
+

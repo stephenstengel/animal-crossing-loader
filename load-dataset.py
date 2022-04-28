@@ -37,9 +37,14 @@ TEST_SAVE_DIRECTORY = "./dataset/test/"
 
 HIDDEN_DOWNLOAD_FLAG_FILE = ".isnotfirstdownload"
 
-#unused currently because image_dataset_from_directory creates labels automatically.
 CLASS_INTERESTING = 0
 CLASS_NOT_INTERESTING = 1
+
+CLASS_INTERESTING_STRING = "interesting"
+CLASS_NOT_INTERESTING_STRING = "not"
+
+CLASS_NAMES_LIST_INT = [CLASS_INTERESTING, CLASS_NOT_INTERESTING]
+CLASS_NAMES_LIST_STR = [CLASS_INTERESTING_STRING, CLASS_NOT_INTERESTING_STRING]
 
 TEST_PRINTING = True
 IS_SAVE_THE_DATASETS = True
@@ -61,12 +66,12 @@ def main(args):
 	notInterestingFNames = getListOfAnimalPicsInOneClass(DATASET_COPY_FOLDER_NOT)
 	
 	#These WILL change later
-	img_height = 100
-	img_width = 100
+	# ~ img_height = 100
+	# ~ img_width = 100
 	# ~ img_height = 512
 	# ~ img_width = 512
-	# ~ img_height = 600
-	# ~ img_width = 800
+	img_height = 600
+	img_width = 800
 	batch_size = 32
 
 	print("creating the datasets...")
@@ -147,9 +152,14 @@ def saveDatasets(train_ds, trainDir, val_ds, valDir, test_ds, testDir):
 
 
 #Split into helper functions later.
+#The batching makes them get stuck together in batches. Right now that's 32 images.
+#So whenever you take one from the set, you get a batch of 32 images.
 def createAnimalsDataset(baseDirectory, img_height, img_width, batch_size):
 	train_ds = tf.keras.preprocessing.image_dataset_from_directory(
 		baseDirectory,
+		labels = "inferred",
+		label_mode = "int",
+		class_names = CLASS_NAMES_LIST_STR, #must match directory names
 		color_mode = "grayscale",
 		validation_split=0.2,
 		subset="training",
@@ -159,6 +169,9 @@ def createAnimalsDataset(baseDirectory, img_height, img_width, batch_size):
 
 	val_ds = tf.keras.preprocessing.image_dataset_from_directory(
 		baseDirectory,
+		labels = "inferred",
+		label_mode = "int",
+		class_names = CLASS_NAMES_LIST_STR, #must match directory names
 		color_mode = "grayscale",
 		validation_split=0.2,
 		subset="validation",
@@ -167,70 +180,49 @@ def createAnimalsDataset(baseDirectory, img_height, img_width, batch_size):
 		batch_size=batch_size)
 
 	if TEST_PRINTING:
+		print("Showing some unaltered images...")
 		printRandomSample(train_ds)
+
+	AUTOTUNE = tf.data.AUTOTUNE
 
 	normalization_layer = tf.keras.layers.Rescaling(1./255) #for newer versions of tensorflow
 	# ~ normalization_layer = tf.keras.layers.experimental.preprocessing.Rescaling(1./255) #for old versions
-	n_train_ds = train_ds.map(lambda x, y: (normalization_layer(x), y))
-	n_val_ds = val_ds.map(lambda x, y: (normalization_layer(x), y))
+	n_train_ds = train_ds.map(lambda x, y: (normalization_layer(x), y),  num_parallel_calls=AUTOTUNE)
+	n_val_ds = val_ds.map(lambda x, y: (normalization_layer(x), y),  num_parallel_calls=AUTOTUNE)
 
 	n_val_ds, n_test_ds = createTestSet(n_val_ds)
 
 	flippyBoy = tf.keras.layers.experimental.preprocessing.RandomFlip("horizontal")
-	n_train_ds = val_ds.map(lambda x, y: (flippyBoy(x), y))
-	n_val_ds = val_ds.map(lambda x, y: (flippyBoy(x), y))
+	n_train_ds = val_ds.map(lambda x, y: (flippyBoy(x), y),  num_parallel_calls=AUTOTUNE)
+	n_val_ds = val_ds.map(lambda x, y: (flippyBoy(x), y),  num_parallel_calls=AUTOTUNE)
 
 	myRotate = tf.keras.layers.experimental.preprocessing.RandomRotation(0.2)
-	n_train_ds = val_ds.map(lambda x, y: (myRotate(x), y))
-	n_val_ds = val_ds.map(lambda x, y: (myRotate(x), y))
+	n_train_ds = val_ds.map(lambda x, y: (myRotate(x), y),  num_parallel_calls=AUTOTUNE)
+	n_val_ds = val_ds.map(lambda x, y: (myRotate(x), y),  num_parallel_calls=AUTOTUNE)
 
-	AUTOTUNE = tf.data.AUTOTUNE
 	n_train_ds = n_train_ds.prefetch(buffer_size=AUTOTUNE)
 	n_val_ds = n_val_ds.prefetch(buffer_size=AUTOTUNE)
 	n_test_ds = n_test_ds.prefetch(buffer_size=AUTOTUNE)
 	
 	if TEST_PRINTING:
-		printRandomSampleTwo(n_train_ds)
+		print("Showing some augmented images...")
+		printRandomSample(n_train_ds)
 
 	return n_train_ds, n_val_ds, n_test_ds
 
 
-def printRandomSample(train_ds):
-	class_names = train_ds.class_names
-	print("class names: " + str(class_names))
-	
-	print("Loading some images from the training dataset before augmentation...")
+#Prints nine random images from the dataset.
+def printRandomSample(in_ds):
 	plt.figure(figsize=(10, 10))
-	for images, labels in train_ds.take(1):
+	for img, label in in_ds.take(1):
 		for i in tqdm(range(9)):
 			ax = plt.subplot(3, 3, i + 1)
-			plt.imshow( images[i] , cmap='gray')
-			plt.title(class_names[labels[i]])
+			myImg = np.asarray(img)
+			plt.imshow(np.asarray(myImg[i]), cmap="gray")
+			plt.title( CLASS_NAMES_LIST_STR[ np.asarray(label[i]) ]  )
 			plt.axis("off")
 		plt.show()
-
-def printRandomSampleTwo(train_ds):
 	
-	for img, label in train_ds.take(1):
-		myImg = np.asarray(img, dtype="uint8")
-		myImg = np.squeeze(myImg)
-		plt.imshow(np.asarray(myImg[0]), cmap="gray")
-		plt.show()
-		print()
-	
-	# ~ class_names = train_ds.class_names
-	# ~ print("class names: " + str(class_names))
-	
-	# ~ print("Loading some images from the training dataset before augmentation...")
-	# ~ plt.figure(figsize=(10, 10))
-	# ~ for images, labels in train_ds.take(1):
-		# ~ for i in tqdm(range(9)):
-			# ~ ax = plt.subplot(3, 3, i + 1)
-			# ~ plt.imshow( images[i] , cmap='gray')
-			# ~ plt.title(class_names[labels[i]])
-			# ~ plt.axis("off")
-		# ~ plt.show()
-
 
 def createFileStructure(baseDirSource, destination):
 	copyDatasetToTMP(baseDirSource, destination)
