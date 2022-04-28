@@ -21,3 +21,5 @@ https://cs230.stanford.edu/blog/tensorflow/
 https://cs230.stanford.edu/blog/datapipeline/#best-practices
 
 https://towardsdatascience.com/transfer-learning-with-tf-2-0-ff960901046d
+
+https://www.tensorflow.org/guide/keras/train_and_evaluate

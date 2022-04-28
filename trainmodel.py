@@ -70,13 +70,21 @@ def main(args):
 	print("DONE")
 
 
-def predictTestSet(myModel, test):
-	predictions = myModel.predict(test)
-	score = predictions[0]
+def predictTestSet(myModel, test_ds):
+	predictions = myModel.predict(test_ds)
+	print("predictions object: " + str(predictions))
 
 
 def evaluateModel(myModel, test):
-	pass
+	print("Calculating scores...")
+	scores = myModel.evaluate(test)
+	print("Done!")
+	print("Scores object: " + str(scores))
+	
+	print("Accuracy on test set: " + str(scores[1]))
+	
+	
+
 
 
 def evaluateTraining(history):
@@ -172,6 +180,8 @@ def makeXceptionBasedModel():
 			loss='sparse_categorical_crossentropy',
 			metrics=['accuracy'])
 	
+	myModel.summary()
+	
 	return myModel
 
 
@@ -182,17 +192,20 @@ def trainModel(model, train_ds, val_ds):
 			filepath = checkpointFolder,
 			monitor = "accuracy",
 			save_best_only = True,
-			mode = "max")
+			mode = "max",
+			verbose = 1)
 	callbacks_list = [checkpointer]
 		
-	epochs = 10
-	# ~ stepsPerEpoch = 10
+	epochs = 2
+	stepsPerEpoch = 20
 	myHistory = model.fit(
 			train_ds,
 			epochs=epochs,
-			# ~ steps_per_epoch = stepsPerEpoch,
+			steps_per_epoch = stepsPerEpoch,
 			validation_data=val_ds,
 			callbacks = callbacks_list)
+			
+			## Can also use validation_split, to automatically do validation
 	
 	return myHistory, model
 	
