@@ -93,6 +93,10 @@ def makeDirectories():
 	if not os.path.isdir(DATASET_COPY_FOLDER_NOT):
 		os.mkdir(DATASET_COPY_FOLDER_NOT)
 	
+	#Clear out old dataset files.
+	if os.path.isdir(DATASET_SAVE_DIR):
+		shutil.rmtree(DATASET_SAVE_DIR, ignore_errors = True)
+	
 	if not os.path.isdir(DATASET_SAVE_DIR):
 		os.mkdir(DATASET_SAVE_DIR)
 	if not os.path.isdir(TRAIN_SAVE_DIRECTORY):
