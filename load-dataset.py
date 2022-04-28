@@ -189,6 +189,9 @@ def createAnimalsDataset(baseDirectory, img_height, img_width, batch_size):
 	n_val_ds = n_val_ds.prefetch(buffer_size=AUTOTUNE)
 	n_test_ds = n_test_ds.prefetch(buffer_size=AUTOTUNE)
 	
+	if TEST_PRINTING:
+		printRandomSampleTwo(n_train_ds)
+
 	return n_train_ds, n_val_ds, n_test_ds
 
 
@@ -205,6 +208,28 @@ def printRandomSample(train_ds):
 			plt.title(class_names[labels[i]])
 			plt.axis("off")
 		plt.show()
+
+def printRandomSampleTwo(train_ds):
+	
+	for img, label in train_ds.take(1):
+		myImg = np.asarray(img, dtype="uint8")
+		myImg = np.squeeze(myImg)
+		plt.imshow(np.asarray(myImg[0]), cmap="gray")
+		plt.show()
+		print()
+	
+	# ~ class_names = train_ds.class_names
+	# ~ print("class names: " + str(class_names))
+	
+	# ~ print("Loading some images from the training dataset before augmentation...")
+	# ~ plt.figure(figsize=(10, 10))
+	# ~ for images, labels in train_ds.take(1):
+		# ~ for i in tqdm(range(9)):
+			# ~ ax = plt.subplot(3, 3, i + 1)
+			# ~ plt.imshow( images[i] , cmap='gray')
+			# ~ plt.title(class_names[labels[i]])
+			# ~ plt.axis("off")
+		# ~ plt.show()
 
 
 def createFileStructure(baseDirSource, destination):
