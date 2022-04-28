@@ -66,8 +66,10 @@ def main(args):
 	notInterestingFNames = getListOfAnimalPicsInOneClass(DATASET_COPY_FOLDER_NOT)
 	
 	#These WILL change later
-	img_height = 100
-	img_width = 100
+	# ~ img_height = 100
+	# ~ img_width = 100
+	img_height = 150
+	img_width = 150
 	# ~ img_height = 512
 	# ~ img_width = 512
 	# ~ img_height = 600
@@ -181,9 +183,6 @@ def createAnimalsDataset(baseDirectory, img_height, img_width, batch_size):
 		image_size=(img_height, img_width),
 		batch_size=batch_size)
 
-	if TEST_PRINTING:
-		print("Showing some unaltered images...")
-		printRandomSample(train_ds)
 
 	AUTOTUNE = tf.data.AUTOTUNE
 
@@ -191,6 +190,10 @@ def createAnimalsDataset(baseDirectory, img_height, img_width, batch_size):
 	# ~ normalization_layer = tf.keras.layers.experimental.preprocessing.Rescaling(1./255) #for old versions
 	n_train_ds = train_ds.map(lambda x, y: (normalization_layer(x), y),  num_parallel_calls=AUTOTUNE)
 	n_val_ds = val_ds.map(lambda x, y: (normalization_layer(x), y),  num_parallel_calls=AUTOTUNE)
+
+	if TEST_PRINTING:
+		print("Showing some unaltered images...")
+		printRandomSample(n_train_ds)
 
 	n_val_ds, n_test_ds = createTestSet(n_val_ds)
 
