@@ -58,13 +58,47 @@ def main(args):
 	print("the shape of the things: " + str(shape))
 	
 	# HARD CODED TO 150x150 right now!
-	# ~ myModel = makeXceptionBasedModel()
-	# ~ myHistory = trainModel(myModel)
+	myModel = makeXceptionBasedModel()
+	myHistory, myModel = trainModel(myModel, train, val)
 	
+	evaluateTraining(myHistory)
+	
+	evaluateModel(myModel, test)
+	
+	predictTestSet(myModel, test)
 	
 	print("DONE")
 
 
+def predictTestSet(myModel, test):
+	predictions = myModel.predict(test)
+	score = predictions[0]
+
+
+def evaluateModel(myModel, test):
+	pass
+
+
+def evaluateTraining(history):
+	accuracy = history.history["accuracy"]
+	val_accuracy = history.history["val_accuracy"]
+	
+	loss = history.history["loss"]
+	val_loss = history.history["val_loss"]
+	epochs = range(1, len(accuracy) + 1)
+	plt.plot(epochs, accuracy, "o", label="Training accuracy")
+	plt.plot(epochs, val_accuracy, "^", label="Validation accuracy")
+	plt.title("Training and validation accuracy")
+	plt.legend()
+	plt.savefig("trainvalacc.png")
+	plt.clf()
+	
+	plt.plot(epochs, loss, "o", label="Training loss")
+	plt.plot(epochs, val_loss, "^", label="Validation loss")
+	plt.title("Training and validation loss")
+	plt.legend()
+	plt.savefig("trainvalloss.png")
+	plt.clf()
 
 
 def getDatasets(trainDir, valDir, testDir):
@@ -98,6 +132,8 @@ def printRandomSample(in_ds):
 			plt.title( CLASS_NAMES_LIST_STR[ np.asarray(label[i]) ]  )
 			plt.axis("off")
 		plt.show()
+	
+	plt.clf()
 
 
 #get shape of pictures in model
@@ -149,16 +185,16 @@ def trainModel(model, train_ds, val_ds):
 			mode = "max")
 	callbacks_list = [checkpointer]
 		
-	epochs = 3
-	stepsPerEpoch = 10
+	epochs = 10
+	# ~ stepsPerEpoch = 10
 	myHistory = model.fit(
 			train_ds,
 			epochs=epochs,
-			steps_per_epoch = stepsPerEpoch,
+			# ~ steps_per_epoch = stepsPerEpoch,
 			validation_data=val_ds,
 			callbacks = callbacks_list)
 	
-	return myHistory
+	return myHistory, model
 	
 
 
