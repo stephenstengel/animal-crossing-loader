@@ -15,6 +15,7 @@ import skimage
 import shutil
 import matplotlib.pyplot as plt
 from pathlib import Path
+from tqdm import tqdm #Pretty loading bars
 
 import numpy as np
 import tensorflow as tf
@@ -40,7 +41,7 @@ HIDDEN_DOWNLOAD_FLAG_FILE = ".isnotfirstdownload"
 CLASS_INTERESTING = 0
 CLASS_NOT_INTERESTING = 1
 
-TEST_PRINTING = False
+TEST_PRINTING = True
 IS_SAVE_THE_DATASETS = True
 IS_DOWNLOAD_PICTURES = False
 
@@ -62,6 +63,8 @@ def main(args):
 	#These WILL change later
 	img_height = 100
 	img_width = 100
+	# ~ img_height = 512
+	# ~ img_width = 512
 	# ~ img_height = 600
 	# ~ img_width = 800
 	batch_size = 32
@@ -164,20 +167,10 @@ def createAnimalsDataset(baseDirectory, img_height, img_width, batch_size):
 		batch_size=batch_size)
 
 	if TEST_PRINTING:
-		class_names = train_ds.class_names
-		print("class names: " + str(class_names))
+		printRandomSample(train_ds)
 
-		plt.figure(figsize=(10, 10))
-		for images, labels in train_ds.take(1):
-			for i in range(9):
-				ax = plt.subplot(3, 3, i + 1)
-				plt.imshow( images[i] , cmap='gray')
-				plt.title(class_names[labels[i]])
-				plt.axis("off")
-			plt.show()
-
-	# ~ normalization_layer = tf.keras.layers.Rescaling(1./255) #for new versions
-	normalization_layer = tf.keras.layers.experimental.preprocessing.Rescaling(1./255) #for old versions
+	normalization_layer = tf.keras.layers.Rescaling(1./255) #for newer versions of tensorflow
+	# ~ normalization_layer = tf.keras.layers.experimental.preprocessing.Rescaling(1./255) #for old versions
 	n_train_ds = train_ds.map(lambda x, y: (normalization_layer(x), y))
 	n_val_ds = val_ds.map(lambda x, y: (normalization_layer(x), y))
 
@@ -199,17 +192,29 @@ def createAnimalsDataset(baseDirectory, img_height, img_width, batch_size):
 	return n_train_ds, n_val_ds, n_test_ds
 
 
+def printRandomSample(train_ds):
+	class_names = train_ds.class_names
+	print("class names: " + str(class_names))
+	
+	print("Loading some images from the training dataset before augmentation...")
+	plt.figure(figsize=(10, 10))
+	for images, labels in train_ds.take(1):
+		for i in tqdm(range(9)):
+			ax = plt.subplot(3, 3, i + 1)
+			plt.imshow( images[i] , cmap='gray')
+			plt.title(class_names[labels[i]])
+			plt.axis("off")
+		plt.show()
+
+
 def createFileStructure(baseDirSource, destination):
 	copyDatasetToTMP(baseDirSource, destination)
-	
-	# ~ dirNames = getListOfDirNames(destination)
-	# ~ for dName in dirNames:
-		# ~ copyDatasetToTMP(dName, destination)
-	
+
 
 def copyDatasetToTMP(baseDirSource, destination):
+	print("Copying files to " + str(destination))
 	cpyFiles = getListOfFilenames(baseDirSource)
-	for thisName in cpyFiles:
+	for thisName in tqdm(cpyFiles):
 		try:
 			shutil.copy(thisName, destination)
 		except:
