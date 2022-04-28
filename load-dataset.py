@@ -160,7 +160,8 @@ def createAnimalsDataset(baseDirectory, img_height, img_width, batch_size):
 		labels = "inferred",
 		label_mode = "int",
 		class_names = CLASS_NAMES_LIST_STR, #must match directory names
-		color_mode = "grayscale",
+		# ~ color_mode = "grayscale",
+		color_mode = "rgb",
 		validation_split=0.2,
 		subset="training",
 		seed=123,
@@ -172,7 +173,8 @@ def createAnimalsDataset(baseDirectory, img_height, img_width, batch_size):
 		labels = "inferred",
 		label_mode = "int",
 		class_names = CLASS_NAMES_LIST_STR, #must match directory names
-		color_mode = "grayscale",
+		# ~ color_mode = "grayscale",
+		color_mode = "rgb",
 		validation_split=0.2,
 		subset="validation",
 		seed=123,
@@ -193,11 +195,11 @@ def createAnimalsDataset(baseDirectory, img_height, img_width, batch_size):
 	n_val_ds, n_test_ds = createTestSet(n_val_ds)
 
 	flippyBoy = tf.keras.layers.experimental.preprocessing.RandomFlip("horizontal")
-	n_train_ds = val_ds.map(lambda x, y: (flippyBoy(x), y),  num_parallel_calls=AUTOTUNE)
-	n_val_ds = val_ds.map(lambda x, y: (flippyBoy(x), y),  num_parallel_calls=AUTOTUNE)
+	n_train_ds = n_train_ds.map(lambda x, y: (flippyBoy(x), y),  num_parallel_calls=AUTOTUNE)
+	n_val_ds = n_val_ds.map(lambda x, y: (flippyBoy(x), y),  num_parallel_calls=AUTOTUNE)
 
 	myRotate = tf.keras.layers.experimental.preprocessing.RandomRotation(0.2)
-	n_train_ds = val_ds.map(lambda x, y: (myRotate(x), y),  num_parallel_calls=AUTOTUNE)
+	n_train_ds = n_train_ds.map(lambda x, y: (myRotate(x), y),  num_parallel_calls=AUTOTUNE)
 	n_val_ds = val_ds.map(lambda x, y: (myRotate(x), y),  num_parallel_calls=AUTOTUNE)
 
 	n_train_ds = n_train_ds.prefetch(buffer_size=AUTOTUNE)
@@ -211,6 +213,7 @@ def createAnimalsDataset(baseDirectory, img_height, img_width, batch_size):
 	return n_train_ds, n_val_ds, n_test_ds
 
 
+#Can import from trainmodel later
 #Prints nine random images from the dataset.
 def printRandomSample(in_ds):
 	plt.figure(figsize=(10, 10))

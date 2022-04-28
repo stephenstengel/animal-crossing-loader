@@ -20,4 +20,4 @@ https://stackoverflow.com/questions/71638403/how-do-i-use-tf-keras-preprocessing
 https://cs230.stanford.edu/blog/tensorflow/
 https://cs230.stanford.edu/blog/datapipeline/#best-practices
 
-
+https://towardsdatascience.com/transfer-learning-with-tf-2-0-ff960901046d
