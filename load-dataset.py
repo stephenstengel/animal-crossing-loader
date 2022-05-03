@@ -77,7 +77,7 @@ def main(args):
 	batch_size = 32
 
 	print("creating the datasets...")
-	train_ds, val_ds = createAnimalsDataset(
+	train_ds, test_ds = createAnimalsDataset(
 			DATASET_COPY_FOLDER, img_height, img_width, batch_size)
 	print("Done!")
 	
@@ -85,7 +85,7 @@ def main(args):
 	if IS_SAVE_THE_DATASETS:
 		saveDatasets(
 				train_ds, TRAIN_SAVE_DIRECTORY,
-				val_ds, VAL_SAVE_DIRECTORY)
+				test_ds, TEST_SAVE_DIRECTORY)
 		print("Done!")
 	else:
 		print("Saving disabled for now!")
@@ -147,9 +147,9 @@ def createTestSet(val_ds):
 	return val_ds, test_dataset
 
 
-def saveDatasets(train_ds, trainDir, val_ds, valDir):
+def saveDatasets(train_ds, trainDir, test_ds, testDir):
 	tf.data.experimental.save(train_ds, trainDir)
-	tf.data.experimental.save(val_ds, valDir)
+	tf.data.experimental.save(test_ds, testDir)
 
 
 #Split into helper functions later.
@@ -168,7 +168,8 @@ def createAnimalsDataset(baseDirectory, img_height, img_width, batch_size):
 		image_size=(img_height, img_width),
 		batch_size=batch_size)
 
-	val_ds = tf.keras.preprocessing.image_dataset_from_directory(
+	## The function calls it a validation set, but we can use it as a test set.
+	test_ds = tf.keras.preprocessing.image_dataset_from_directory(
 		baseDirectory,
 		labels = "inferred",
 		label_mode = "int",
@@ -185,33 +186,32 @@ def createAnimalsDataset(baseDirectory, img_height, img_width, batch_size):
 
 	normalization_layer = tf.keras.layers.Rescaling(1./255) #for newer versions of tensorflow
 	# ~ normalization_layer = tf.keras.layers.experimental.preprocessing.Rescaling(1./255) #for old versions
-	n_train_ds = train_ds.map(lambda x, y: (normalization_layer(x), y),  num_parallel_calls=AUTOTUNE)
-	n_val_ds = val_ds.map(lambda x, y: (normalization_layer(x), y),  num_parallel_calls=AUTOTUNE)
+	train_ds = train_ds.map(lambda x, y: (normalization_layer(x), y),  num_parallel_calls=AUTOTUNE)
+	test_ds = test_ds.map(lambda x, y: (normalization_layer(x), y),  num_parallel_calls=AUTOTUNE)
 
-	if TEST_PRINTING:
-		print("Showing some unaltered images...")
-		printRandomSample(n_train_ds)
 
 	flippyBoy = tf.keras.layers.experimental.preprocessing.RandomFlip("horizontal")
-	n_train_ds = n_train_ds.map(lambda x, y: (flippyBoy(x), y),  num_parallel_calls=AUTOTUNE)
-	n_val_ds = n_val_ds.map(lambda x, y: (flippyBoy(x), y),  num_parallel_calls=AUTOTUNE)
+	train_ds = train_ds.map(lambda x, y: (flippyBoy(x), y),  num_parallel_calls=AUTOTUNE)
 
 	myRotate = tf.keras.layers.experimental.preprocessing.RandomRotation(0.2)
-	n_train_ds = n_train_ds.map(lambda x, y: (myRotate(x), y),  num_parallel_calls=AUTOTUNE)
-	n_val_ds = val_ds.map(lambda x, y: (myRotate(x), y),  num_parallel_calls=AUTOTUNE)
+	train_ds = train_ds.map(lambda x, y: (myRotate(x), y),  num_parallel_calls=AUTOTUNE)
 
-	n_train_ds = n_train_ds.prefetch(buffer_size=AUTOTUNE)
-	n_val_ds = n_val_ds.prefetch(buffer_size=AUTOTUNE)
+	train_ds = train_ds.prefetch(buffer_size=AUTOTUNE)
+	test_ds = test_ds.prefetch(buffer_size=AUTOTUNE)
 	
 	if TEST_PRINTING:
-		print("Showing some augmented images...")
-		printRandomSample(n_train_ds)
+		print("Showing some unaltered images from the testing set...")
+		printRandomSample(test_ds)
 
-	return n_train_ds, n_val_ds
+	if TEST_PRINTING:
+		print("Showing some augmented images from the training set...")
+		printRandomSample(train_ds)
+
+	return train_ds, test_ds
 
 
 #Can import from trainmodel later
-#Prints nine random images from the dataset.
+#Prints nine random images from the first batch of the dataset.
 def printRandomSample(in_ds):
 	plt.figure(figsize=(10, 10))
 	for img, label in in_ds.take(1):
