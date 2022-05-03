@@ -162,8 +162,7 @@ def createAnimalsDataset(baseDirectory, img_height, img_width, batch_size):
 		labels = "inferred",
 		label_mode = "int",
 		class_names = CLASS_NAMES_LIST_STR, #must match directory names
-		# ~ color_mode = "grayscale",
-		color_mode = "rgb",
+		color_mode = "grayscale",
 		validation_split=0.2,
 		subset="training",
 		seed=123,
@@ -175,8 +174,7 @@ def createAnimalsDataset(baseDirectory, img_height, img_width, batch_size):
 		labels = "inferred",
 		label_mode = "int",
 		class_names = CLASS_NAMES_LIST_STR, #must match directory names
-		# ~ color_mode = "grayscale",
-		color_mode = "rgb",
+		color_mode = "grayscale",
 		validation_split=0.2,
 		subset="validation",
 		seed=123,

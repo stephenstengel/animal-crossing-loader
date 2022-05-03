@@ -155,10 +155,10 @@ def getPictureShape(in_ds):
 #imageShape is a tiple containing h w channels  (or was it w h channels? idk)
 def makeXceptionBasedModel():
 	base_model = keras.applications.Xception(
-		weights="imagenet",  # Load weights pre-trained on ImageNet.
+		weights="imagenet",  
 		input_shape=(150, 150, 3),
 		include_top=False,
-	)  # Do not include the ImageNet classifier at the top.
+	)  
 	
 	# Freeze the base_model
 	base_model.trainable = False
@@ -196,12 +196,12 @@ def trainModel(model, train_ds, val_ds):
 			verbose = 1)
 	callbacks_list = [checkpointer]
 		
-	epochs = 2
+	epochs = 20
 	stepsPerEpoch = 20
 	myHistory = model.fit(
 			train_ds,
 			epochs=epochs,
-			steps_per_epoch = stepsPerEpoch,
+			# ~ steps_per_epoch = stepsPerEpoch,
 			validation_data=val_ds,
 			callbacks = callbacks_list)
 			
