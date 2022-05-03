@@ -77,7 +77,7 @@ def main(args):
 	batch_size = 32
 
 	print("creating the datasets...")
-	train_ds, val_ds, test_ds = createAnimalsDataset(
+	train_ds, val_ds = createAnimalsDataset(
 			DATASET_COPY_FOLDER, img_height, img_width, batch_size)
 	print("Done!")
 	
@@ -85,8 +85,7 @@ def main(args):
 	if IS_SAVE_THE_DATASETS:
 		saveDatasets(
 				train_ds, TRAIN_SAVE_DIRECTORY,
-				val_ds, VAL_SAVE_DIRECTORY,
-				test_ds, TEST_SAVE_DIRECTORY)
+				val_ds, VAL_SAVE_DIRECTORY)
 		print("Done!")
 	else:
 		print("Saving disabled for now!")
@@ -139,6 +138,7 @@ def isDownloadedFlagFileSet():
 	
 
 #Takes some images from the validation set and sets the aside for the test set.
+#currently unused.
 def createTestSet(val_ds):
 	val_batches = tf.data.experimental.cardinality(val_ds)
 	test_dataset = val_ds.take(val_batches // 5)
@@ -147,10 +147,9 @@ def createTestSet(val_ds):
 	return val_ds, test_dataset
 
 
-def saveDatasets(train_ds, trainDir, val_ds, valDir, test_ds, testDir):
+def saveDatasets(train_ds, trainDir, val_ds, valDir):
 	tf.data.experimental.save(train_ds, trainDir)
 	tf.data.experimental.save(val_ds, valDir)
-	tf.data.experimental.save(test_ds, testDir)
 
 
 #Split into helper functions later.
@@ -193,8 +192,6 @@ def createAnimalsDataset(baseDirectory, img_height, img_width, batch_size):
 		print("Showing some unaltered images...")
 		printRandomSample(n_train_ds)
 
-	n_val_ds, n_test_ds = createTestSet(n_val_ds)
-
 	flippyBoy = tf.keras.layers.experimental.preprocessing.RandomFlip("horizontal")
 	n_train_ds = n_train_ds.map(lambda x, y: (flippyBoy(x), y),  num_parallel_calls=AUTOTUNE)
 	n_val_ds = n_val_ds.map(lambda x, y: (flippyBoy(x), y),  num_parallel_calls=AUTOTUNE)
@@ -205,13 +202,12 @@ def createAnimalsDataset(baseDirectory, img_height, img_width, batch_size):
 
 	n_train_ds = n_train_ds.prefetch(buffer_size=AUTOTUNE)
 	n_val_ds = n_val_ds.prefetch(buffer_size=AUTOTUNE)
-	n_test_ds = n_test_ds.prefetch(buffer_size=AUTOTUNE)
 	
 	if TEST_PRINTING:
 		print("Showing some augmented images...")
 		printRandomSample(n_train_ds)
 
-	return n_train_ds, n_val_ds, n_test_ds
+	return n_train_ds, n_val_ds
 
 
 #Can import from trainmodel later
