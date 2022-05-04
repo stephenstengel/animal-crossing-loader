@@ -1,12 +1,9 @@
 This is a script that can download, process, and save the animal images
-as a tensorflow dataset.
-
-## WOW also train a model! ##
+as a tensorflow dataset and as sets of png images.
 
 Usage:
 	To run for the first time:
 		python3 load-dataset.py
-		python3 trainmodel.py
 	
 	To update the animal pictures from the ftp server:
 		python3 load-dataset.py download
@@ -19,31 +16,5 @@ Usage:
 When run for the first time, it places a hidden file named
 ".isnotfirstdownload" in the base directory so that it will skip the
 download step.
-
-
-TODO:
-Add checkpoint folder to the directory maker.
-
-Figure out what the predicted output means; if error.
-
-Remove the manually made validation set. We only need to create the
-training set and the test set. The validation set can be created
-automatically by the .fit function.
-
-Implement ROC curve to see if it is really a good fit. The test set has
-more  interesting than not so it will only be statistically significant
-if there are not many false positives / false negatives.
-
-Clean up code. Make the loading and training steps independent. Right
-now, the images are normalized in the loading step-- some models need
-specific normalizations like [-1,1] or [0,1] etc.
-
-Implement more models. Use more prebuild models as bases. Also change
-the additional layers on the bottom.
-
-More command line control of flags.
-
-Make file stuff windows friendly by using os.path library
-
 
 2022 Stephen Stengel <stephen.stengel@cwu> and friends

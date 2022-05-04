@@ -23,6 +23,7 @@ import numpy as np
 import tensorflow as tf
 
 print("Done!")
+
 CLASS_INTERESTING = 0
 CLASS_NOT_INTERESTING = 1
 
@@ -119,25 +120,25 @@ def main(args):
 		print("Done!")
 	else:
 		print("Saving disabled for now!")
-		
-	print("Saving the datasets as image files...")
-	pngTrainBase = DATASET_PNG_FOLDER_TRAIN
-	saveDatasetAsPNG(train_ds, pngTrainBase)
-	pngTestBase = DATASET_PNG_FOLDER_TEST
-	saveDatasetAsPNG(test_ds, pngTestBase)
+	
+	if IS_SAVE_THE_PNGS:
+		print("Saving the datasets as image files...")
+		saveDatasetAsPNG(train_ds, DATASET_PNG_FOLDER_TRAIN)
+		saveDatasetAsPNG(test_ds, DATASET_PNG_FOLDER_TEST)
+	else:
+		print("PNG saving disabled for now!")
 
 	print("Deleting the temporary image folder...")
 	shutil.rmtree(DATASET_COPY_FOLDER)
 	
-	os.system("sync")
+	os.sync()
 	
 	print("Done!")
 
 	return 0
 
 
-#Could put all the directory strings into an array and use a for loop to
-#make sure they are all created. Using makedirs()
+# Creates the necessary directories.
 def makeDirectories(listOfFoldersToCreate):
 	#Clear out old files -- Justin Case
 	if os.path.isdir(DATASET_SAVE_DIR):
@@ -184,7 +185,6 @@ def saveDatasets(train_ds, trainDir, test_ds, testDir):
 	tf.data.experimental.save(test_ds, testDir)
 
 
-#Split into helper functions later.
 #The batching makes them get stuck together in batches. Right now that's 32 images.
 #So whenever you take one from the set, you get a batch of 32 images.
 def createAnimalsDataset(baseDirectory, img_height, img_width, batch_size):
@@ -213,14 +213,12 @@ def createAnimalsDataset(baseDirectory, img_height, img_width, batch_size):
 		image_size=(img_height, img_width),
 		batch_size=batch_size)
 
-
 	AUTOTUNE = tf.data.AUTOTUNE
 
 	normalization_layer = tf.keras.layers.Rescaling(1./255) #for newer versions of tensorflow
 	# ~ normalization_layer = tf.keras.layers.experimental.preprocessing.Rescaling(1./255) #for old versions
 	train_ds = train_ds.map(lambda x, y: (normalization_layer(x), y),  num_parallel_calls=AUTOTUNE)
 	test_ds = test_ds.map(lambda x, y: (normalization_layer(x), y),  num_parallel_calls=AUTOTUNE)
-
 
 	flippyBoy = tf.keras.layers.experimental.preprocessing.RandomFlip("horizontal")
 	train_ds = train_ds.map(lambda x, y: (flippyBoy(x), y),  num_parallel_calls=AUTOTUNE)
@@ -242,7 +240,7 @@ def createAnimalsDataset(baseDirectory, img_height, img_width, batch_size):
 	return train_ds, test_ds
 
 
-# ~ #Prints first nine images from the first batch of the dataset.
+# Prints first nine images from the first batch of the dataset.
 # It's random as long as you shuffle the dataset! ;)
 def printSample(in_ds):
 	plt.figure(figsize=(10, 10))
@@ -272,10 +270,10 @@ def saveDatasetAsPNG(in_ds, saveFolder):
 			
 
 def createFileStructure(baseDirSource, destination):
-	copyDatasetToTMP(baseDirSource, destination)
+	recursivelyCopyAllFilesInFolderToOneDestinationFolder(baseDirSource, destination)
 
 
-def copyDatasetToTMP(baseDirSource, destination):
+def recursivelyCopyAllFilesInFolderToOneDestinationFolder(baseDirSource, destination):
 	print("Copying files to " + str(destination))
 	cpyFiles = getListOfFilenames(baseDirSource)
 	for thisName in tqdm(cpyFiles):
@@ -347,6 +345,7 @@ def checkArgs(args):
 
 	if shouldIRetrieveImages:
 		retrieveImages()
+
 
 if __name__ == '__main__':
 	import sys

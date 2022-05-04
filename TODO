@@ -1,0 +1,4 @@
+TODO:
+Make file stuff windows friendly by using os.path library
+
+More optional command line control of flags?
