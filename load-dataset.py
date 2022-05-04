@@ -42,6 +42,9 @@ DATASET_PNG_FOLDER = "./datasets-as-png/"
 DATASET_PNG_FOLDER_TRAIN = DATASET_PNG_FOLDER + "train/"
 DATASET_PNG_FOLDER_TRAIN_INT = DATASET_PNG_FOLDER_TRAIN + CLASS_INTERESTING_STRING + "/"
 DATASET_PNG_FOLDER_TRAIN_NOT = DATASET_PNG_FOLDER_TRAIN + CLASS_NOT_INTERESTING_STRING + "/"
+DATASET_PNG_FOLDER_VAL = DATASET_PNG_FOLDER + "validation/"
+DATASET_PNG_FOLDER_VAL_INT = DATASET_PNG_FOLDER_VAL + CLASS_INTERESTING_STRING + "/"
+DATASET_PNG_FOLDER_VAL_NOT = DATASET_PNG_FOLDER_VAL + CLASS_NOT_INTERESTING_STRING + "/"
 DATASET_PNG_FOLDER_TEST = DATASET_PNG_FOLDER + "test/"
 DATASET_PNG_FOLDER_TEST_INT = DATASET_PNG_FOLDER_TEST + CLASS_INTERESTING_STRING + "/"
 DATASET_PNG_FOLDER_TEST_NOT = DATASET_PNG_FOLDER_TEST + CLASS_NOT_INTERESTING_STRING + "/"
@@ -62,6 +65,9 @@ ALL_FOLDERS_LIST = [
 		DATASET_PNG_FOLDER_TRAIN,
 		DATASET_PNG_FOLDER_TRAIN_INT,
 		DATASET_PNG_FOLDER_TRAIN_NOT,
+		DATASET_PNG_FOLDER_VAL,
+		DATASET_PNG_FOLDER_VAL_INT,
+		DATASET_PNG_FOLDER_VAL_NOT,
 		DATASET_PNG_FOLDER_TEST,
 		DATASET_PNG_FOLDER_TEST_INT,
 		DATASET_PNG_FOLDER_TEST_NOT,
@@ -108,7 +114,7 @@ def main(args):
 	batch_size = 32
 
 	print("creating the datasets...")
-	train_ds, test_ds = createAnimalsDataset(
+	train_ds, val_ds, test_ds = createAnimalsDataset(
 			DATASET_COPY_FOLDER, img_height, img_width, batch_size)
 	print("Done!")
 	
@@ -116,6 +122,7 @@ def main(args):
 	if IS_SAVE_THE_DATASETS:
 		saveDatasets(
 				train_ds, TRAIN_SAVE_DIRECTORY,
+				val_ds, VAL_SAVE_DIRECTORY,
 				test_ds, TEST_SAVE_DIRECTORY)
 		print("Done!")
 	else:
@@ -124,6 +131,7 @@ def main(args):
 	if IS_SAVE_THE_PNGS:
 		print("Saving the datasets as image files...")
 		saveDatasetAsPNG(train_ds, DATASET_PNG_FOLDER_TRAIN)
+		saveDatasetAsPNG(val_ds, DATASET_PNG_FOLDER_VAL)
 		saveDatasetAsPNG(test_ds, DATASET_PNG_FOLDER_TEST)
 	else:
 		print("PNG saving disabled for now!")
@@ -171,17 +179,18 @@ def isDownloadedFlagFileSet():
 	
 
 #Takes some images from the validation set and sets the aside for the test set.
-#currently unused.
+# hardcoded half test half val
 def createTestSet(val_ds):
 	val_batches = tf.data.experimental.cardinality(val_ds)
-	test_dataset = val_ds.take(val_batches // 5)
-	val_ds = val_ds.skip(val_batches // 5)
+	test_dataset = val_ds.take(val_batches // 2)
+	val_ds = val_ds.skip(val_batches // 2)
 	
 	return val_ds, test_dataset
 
 
-def saveDatasets(train_ds, trainDir, test_ds, testDir):
+def saveDatasets(train_ds, trainDir, val_ds, valDir, test_ds, testDir):
 	tf.data.experimental.save(train_ds, trainDir)
+	tf.data.experimental.save(val_ds, valDir)
 	tf.data.experimental.save(test_ds, testDir)
 
 
@@ -194,39 +203,44 @@ def createAnimalsDataset(baseDirectory, img_height, img_width, batch_size):
 		label_mode = "int",
 		class_names = CLASS_NAMES_LIST_STR, #must match directory names
 		color_mode = "grayscale",
-		validation_split=0.2,
+		validation_split=0.4,
 		subset="training",
 		seed=123,
 		image_size=(img_height, img_width),
 		batch_size=batch_size)
 
-	## The function calls it a validation set, but we can use it as a test set.
-	test_ds = tf.keras.preprocessing.image_dataset_from_directory(
+	val_ds = tf.keras.preprocessing.image_dataset_from_directory(
 		baseDirectory,
 		labels = "inferred",
 		label_mode = "int",
 		class_names = CLASS_NAMES_LIST_STR, #must match directory names
 		color_mode = "grayscale",
-		validation_split=0.2,
+		validation_split=0.4,
 		subset="validation",
 		seed=123,
 		image_size=(img_height, img_width),
 		batch_size=batch_size)
+
+	val_ds, test_ds = createTestSet(val_ds)
 
 	AUTOTUNE = tf.data.AUTOTUNE
 
 	normalization_layer = tf.keras.layers.Rescaling(1./255) #for newer versions of tensorflow
 	# ~ normalization_layer = tf.keras.layers.experimental.preprocessing.Rescaling(1./255) #for old versions
 	train_ds = train_ds.map(lambda x, y: (normalization_layer(x), y),  num_parallel_calls=AUTOTUNE)
+	val_ds = val_ds.map(lambda x, y: (normalization_layer(x), y),  num_parallel_calls=AUTOTUNE)
 	test_ds = test_ds.map(lambda x, y: (normalization_layer(x), y),  num_parallel_calls=AUTOTUNE)
 
 	flippyBoy = tf.keras.layers.experimental.preprocessing.RandomFlip("horizontal")
 	train_ds = train_ds.map(lambda x, y: (flippyBoy(x), y),  num_parallel_calls=AUTOTUNE)
+	val_ds = val_ds.map(lambda x, y: (flippyBoy(x), y),  num_parallel_calls=AUTOTUNE)
 
 	myRotate = tf.keras.layers.experimental.preprocessing.RandomRotation(0.2)
 	train_ds = train_ds.map(lambda x, y: (myRotate(x), y),  num_parallel_calls=AUTOTUNE)
+	val_ds = val_ds.map(lambda x, y: (myRotate(x), y),  num_parallel_calls=AUTOTUNE)
 
 	train_ds = train_ds.prefetch(buffer_size=AUTOTUNE)
+	val_ds = val_ds.prefetch(buffer_size=AUTOTUNE)
 	test_ds = test_ds.prefetch(buffer_size=AUTOTUNE)
 	
 	if TEST_PRINTING:
@@ -237,7 +251,7 @@ def createAnimalsDataset(baseDirectory, img_height, img_width, batch_size):
 		print("Showing some augmented images from the training set...")
 		printSample(train_ds)
 
-	return train_ds, test_ds
+	return train_ds, val_ds, test_ds
 
 
 # Prints first nine images from the first batch of the dataset.
