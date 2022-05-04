@@ -83,7 +83,7 @@ IS_DOWNLOAD_PICTURES = False
 
 def main(args):
 	print("Hello! This is the Animal Crossing Dataset Loader!")
-	makeDirectories()
+	makeDirectories(ALL_FOLDERS_LIST)
 	checkArgs(args)
 	print("DATASET_DIRECTORY: " + str(DATASET_DIRECTORY))
 
@@ -96,10 +96,10 @@ def main(args):
 	notInterestingFNames = getListOfAnimalPicsInOneClass(DATASET_COPY_FOLDER_NOT)
 	
 	#These WILL change later
-	# ~ img_height = 100
-	# ~ img_width = 100
-	img_height = 150
-	img_width = 150
+	img_height = 100
+	img_width = 100
+	# ~ img_height = 150
+	# ~ img_width = 150
 	# ~ img_height = 512
 	# ~ img_width = 512
 	# ~ img_height = 600
@@ -120,17 +120,16 @@ def main(args):
 	else:
 		print("Saving disabled for now!")
 		
-	
-	
-	print("Saving the images as image files directly...")
-	# ~ pngFolder = DATASET_PNG_FOLDER
-	# ~ saveDatasetAsPNG(test_ds, testPngFolder)
-	# ~ trainPngFolder = DATASET_PNG_FOLDER
-	# ~ saveDatasetAsPNG(test_ds, testPngFolder)
-	
+	print("Saving the datasets as image files...")
+	pngTrainBase = DATASET_PNG_FOLDER_TRAIN
+	saveDatasetAsPNG(train_ds, pngTrainBase)
+	pngTestBase = DATASET_PNG_FOLDER_TEST
+	saveDatasetAsPNG(test_ds, pngTestBase)
 
-	# ~ print("Deleting the temporary image folder...")
-	# ~ shutil.rmtree(DATASET_COPY_FOLDER)
+	print("Deleting the temporary image folder...")
+	shutil.rmtree(DATASET_COPY_FOLDER)
+	
+	os.system("sync")
 	
 	print("Done!")
 
@@ -139,34 +138,18 @@ def main(args):
 
 #Could put all the directory strings into an array and use a for loop to
 #make sure they are all created. Using makedirs()
-def makeDirectories():
-	# ~ DATASET_PNG_FOLDER = "
-	# ~ DATASET_PNG_FOLDER_INT
-	# ~ DATASET_PNG_FOLDER_NOT
-	
-	if not os.path.isdir(DATASET_COPY_FOLDER):
-		os.mkdir(DATASET_COPY_FOLDER)
-	if not os.path.isdir(DATASET_COPY_FOLDER_INT):
-		os.mkdir(DATASET_COPY_FOLDER_INT)
-	if not os.path.isdir(DATASET_COPY_FOLDER_NOT):
-		os.mkdir(DATASET_COPY_FOLDER_NOT)
-	
-	#Clear out old dataset files.
+def makeDirectories(listOfFoldersToCreate):
+	#Clear out old files -- Justin Case
 	if os.path.isdir(DATASET_SAVE_DIR):
 		shutil.rmtree(DATASET_SAVE_DIR, ignore_errors = True)
+	if os.path.isdir(DATASET_PNG_FOLDER):
+		shutil.rmtree(DATASET_PNG_FOLDER, ignore_errors = True)
+	if os.path.isdir(DATASET_COPY_FOLDER):
+		shutil.rmtree(DATASET_COPY_FOLDER, ignore_errors = True)
 	
-	if not os.path.isdir(DATASET_SAVE_DIR):
-		os.mkdir(DATASET_SAVE_DIR)
-	if not os.path.isdir(TRAIN_SAVE_DIRECTORY):
-		os.mkdir(TRAIN_SAVE_DIRECTORY)
-	if not os.path.isdir(VAL_SAVE_DIRECTORY):
-		os.mkdir(VAL_SAVE_DIRECTORY)
-	if not os.path.isdir(TEST_SAVE_DIRECTORY):
-		os.mkdir(TEST_SAVE_DIRECTORY)
-	
-	#makedirs is the easy way. It makes all the required parent folders if they don't exist.
-	if not os.path.isdir(DATASET_DIRECTORY):
-		os.makedirs(DATASET_DIRECTORY)
+	for folder in listOfFoldersToCreate:
+		if not os.path.isdir(folder):
+			os.makedirs(folder)
 
 
 # Retrieves the images if they're not here

@@ -5,3 +5,4 @@ tmpdata
 dataset
 checkpoint
 trainmodel.py
+datasets-as-png
