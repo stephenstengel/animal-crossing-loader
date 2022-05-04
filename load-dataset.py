@@ -12,6 +12,8 @@ print("Loading imports...")
 
 import os
 import skimage
+from skimage.io import imsave
+from skimage.util import img_as_uint
 import shutil
 import matplotlib.pyplot as plt
 from pathlib import Path
@@ -21,33 +23,61 @@ import numpy as np
 import tensorflow as tf
 
 print("Done!")
-
-DATASET_DIRECTORY = "./ftp.wsdot.wa.gov/public/I90Snoq/Biology/thermal/614s/"
-INTERESTING_DIRECTORY = "./ftp.wsdot.wa.gov/public/I90Snoq/Biology/thermal/614s/interesting/"
-NOT_INTERESTING_DIRECTORY = "./ftp.wsdot.wa.gov/public/I90Snoq/Biology/thermal/614s/not interesting/"
-
-DATASET_COPY_FOLDER = "./tmpdata/"
-DATASET_COPY_FOLDER_INT = "./tmpdata/interesting/"
-DATASET_COPY_FOLDER_NOT = "./tmpdata/not/"
-
-DATASET_SAVE_DIR = "./dataset/"
-TRAIN_SAVE_DIRECTORY = "./dataset/train/"
-VAL_SAVE_DIRECTORY = "./dataset/val/"
-TEST_SAVE_DIRECTORY = "./dataset/test/"
-
-HIDDEN_DOWNLOAD_FLAG_FILE = ".isnotfirstdownload"
-
 CLASS_INTERESTING = 0
 CLASS_NOT_INTERESTING = 1
 
 CLASS_INTERESTING_STRING = "interesting"
 CLASS_NOT_INTERESTING_STRING = "not"
 
+DATASET_DIRECTORY = "./ftp.wsdot.wa.gov/public/I90Snoq/Biology/thermal/614s/"
+INTERESTING_DIRECTORY = "./ftp.wsdot.wa.gov/public/I90Snoq/Biology/thermal/614s/interesting/"
+NOT_INTERESTING_DIRECTORY = "./ftp.wsdot.wa.gov/public/I90Snoq/Biology/thermal/614s/not interesting/"
+
+DATASET_COPY_FOLDER = "./tmpdata/"
+DATASET_COPY_FOLDER_INT = DATASET_COPY_FOLDER + CLASS_INTERESTING_STRING + "/"
+DATASET_COPY_FOLDER_NOT = DATASET_COPY_FOLDER + CLASS_NOT_INTERESTING_STRING + "/"
+
+DATASET_PNG_FOLDER = "./datasets-as-png/"
+DATASET_PNG_FOLDER_TRAIN = DATASET_PNG_FOLDER + "train/"
+DATASET_PNG_FOLDER_TRAIN_INT = DATASET_PNG_FOLDER_TRAIN + CLASS_INTERESTING_STRING + "/"
+DATASET_PNG_FOLDER_TRAIN_NOT = DATASET_PNG_FOLDER_TRAIN + CLASS_NOT_INTERESTING_STRING + "/"
+DATASET_PNG_FOLDER_TEST = DATASET_PNG_FOLDER + "test/"
+DATASET_PNG_FOLDER_TEST_INT = DATASET_PNG_FOLDER_TEST + CLASS_INTERESTING_STRING + "/"
+DATASET_PNG_FOLDER_TEST_NOT = DATASET_PNG_FOLDER_TEST + CLASS_NOT_INTERESTING_STRING + "/"
+
+DATASET_SAVE_DIR = "./dataset/"
+TRAIN_SAVE_DIRECTORY = "./dataset/train/"
+VAL_SAVE_DIRECTORY = "./dataset/val/"
+TEST_SAVE_DIRECTORY = "./dataset/test/"
+
+ALL_FOLDERS_LIST = [
+		DATASET_DIRECTORY,
+		INTERESTING_DIRECTORY,
+		NOT_INTERESTING_DIRECTORY,
+		DATASET_COPY_FOLDER,
+		DATASET_COPY_FOLDER_INT,
+		DATASET_COPY_FOLDER_NOT,
+		DATASET_PNG_FOLDER,
+		DATASET_PNG_FOLDER_TRAIN,
+		DATASET_PNG_FOLDER_TRAIN_INT,
+		DATASET_PNG_FOLDER_TRAIN_NOT,
+		DATASET_PNG_FOLDER_TEST,
+		DATASET_PNG_FOLDER_TEST_INT,
+		DATASET_PNG_FOLDER_TEST_NOT,
+		DATASET_SAVE_DIR,
+		TRAIN_SAVE_DIRECTORY,
+		VAL_SAVE_DIRECTORY,
+		TEST_SAVE_DIRECTORY
+		]
+
+HIDDEN_DOWNLOAD_FLAG_FILE = ".isnotfirstdownload"
+
 CLASS_NAMES_LIST_INT = [CLASS_INTERESTING, CLASS_NOT_INTERESTING]
 CLASS_NAMES_LIST_STR = [CLASS_INTERESTING_STRING, CLASS_NOT_INTERESTING_STRING]
 
-TEST_PRINTING = True
+TEST_PRINTING = False
 IS_SAVE_THE_DATASETS = True
+IS_SAVE_THE_PNGS = True
 IS_DOWNLOAD_PICTURES = False
 
 
@@ -89,12 +119,31 @@ def main(args):
 		print("Done!")
 	else:
 		print("Saving disabled for now!")
+		
+	
+	
+	print("Saving the images as image files directly...")
+	# ~ pngFolder = DATASET_PNG_FOLDER
+	# ~ saveDatasetAsPNG(test_ds, testPngFolder)
+	# ~ trainPngFolder = DATASET_PNG_FOLDER
+	# ~ saveDatasetAsPNG(test_ds, testPngFolder)
+	
+
+	# ~ print("Deleting the temporary image folder...")
+	# ~ shutil.rmtree(DATASET_COPY_FOLDER)
+	
+	print("Done!")
 
 	return 0
 
 
-#There is an easier way.
+#Could put all the directory strings into an array and use a for loop to
+#make sure they are all created. Using makedirs()
 def makeDirectories():
+	# ~ DATASET_PNG_FOLDER = "
+	# ~ DATASET_PNG_FOLDER_INT
+	# ~ DATASET_PNG_FOLDER_NOT
+	
 	if not os.path.isdir(DATASET_COPY_FOLDER):
 		os.mkdir(DATASET_COPY_FOLDER)
 	if not os.path.isdir(DATASET_COPY_FOLDER_INT):
@@ -201,18 +250,18 @@ def createAnimalsDataset(baseDirectory, img_height, img_width, batch_size):
 	
 	if TEST_PRINTING:
 		print("Showing some unaltered images from the testing set...")
-		printRandomSample(test_ds)
+		printSample(test_ds)
 
 	if TEST_PRINTING:
 		print("Showing some augmented images from the training set...")
-		printRandomSample(train_ds)
+		printSample(train_ds)
 
 	return train_ds, test_ds
 
 
-#Can import from trainmodel later
-#Prints nine random images from the first batch of the dataset.
-def printRandomSample(in_ds):
+# ~ #Prints first nine images from the first batch of the dataset.
+# It's random as long as you shuffle the dataset! ;)
+def printSample(in_ds):
 	plt.figure(figsize=(10, 10))
 	for img, label in in_ds.take(1):
 		for i in tqdm(range(9)):
@@ -222,7 +271,22 @@ def printRandomSample(in_ds):
 			plt.title( CLASS_NAMES_LIST_STR[ np.asarray(label[i]) ]  )
 			plt.axis("off")
 		plt.show()
-	
+
+
+#save all images from dataset to file as png
+def saveDatasetAsPNG(in_ds, saveFolder):
+	i = 0
+	for batch in tqdm(in_ds):
+		imgArr = np.asarray(batch[0])
+		labelArr = np.asarray(batch[1])
+		for j in range(len(imgArr)):
+			thisImg = imgArr[j]
+			thisImg = img_as_uint(thisImg)
+			thisLabel = labelArr[j]
+			filenamestring = saveFolder + CLASS_NAMES_LIST_STR[thisLabel] + "/" + str(i) + ".png"
+			imsave(filenamestring, thisImg)
+			i = i + 1
+			
 
 def createFileStructure(baseDirSource, destination):
 	copyDatasetToTMP(baseDirSource, destination)
