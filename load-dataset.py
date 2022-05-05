@@ -103,14 +103,10 @@ def main(args):
 	notInterestingFNames = getListOfAnimalPicsInOneClass(DATASET_COPY_FOLDER_NOT)
 	
 	#These WILL change later
-	img_height = 100
+	# ~ img_width = 400
+	# ~ img_height = 300
 	img_width = 100
-	# ~ img_height = 150
-	# ~ img_width = 150
-	# ~ img_height = 512
-	# ~ img_width = 512
-	# ~ img_height = 600
-	# ~ img_width = 800
+	img_height = 100
 	batch_size = 32
 	percentageTrain = 0.6
 	percentageTestToVal = 0.75
@@ -182,7 +178,7 @@ def isDownloadedFlagFileSet():
 
 #Takes some images from the validation set and sets the aside for the test set.
 def createTestSet(val_ds, percentageTestToVal):
-	length = np.asarray(tf.data.experimental.cardinality(val_ds))
+	length = np.asarray(val_ds.cardinality())
 	numForTest = int(length * percentageTestToVal)
 	test_dataset = val_ds.take(numForTest)
 	val_ds = val_ds.skip(numForTest)
