@@ -182,7 +182,7 @@ def isDownloadedFlagFileSet():
 
 #Takes some images from the validation set and sets the aside for the test set.
 def createTestSet(val_ds, percentageTestToVal):
-	length = tf.data.experimental.cardinality(val_ds) #THis doesn't create a number. It creates an EagerTensor. EagerTensor cannot be multiplied. I don't know how to fix this at the moment.
+	length = np.asarray(tf.data.experimental.cardinality(val_ds))
 	numForTest = int(length * percentageTestToVal)
 	test_dataset = val_ds.take(numForTest)
 	val_ds = val_ds.skip(numForTest)
