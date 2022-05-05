@@ -112,10 +112,12 @@ def main(args):
 	# ~ img_height = 600
 	# ~ img_width = 800
 	batch_size = 32
+	percentageTrain = 0.6
+	percentageTestToVal = 0.75
 
 	print("creating the datasets...")
 	train_ds, val_ds, test_ds = createAnimalsDataset(
-			DATASET_COPY_FOLDER, img_height, img_width, batch_size)
+			DATASET_COPY_FOLDER, img_height, img_width, batch_size, percentageTrain, percentageTestToVal)
 	print("Done!")
 	
 	print("Saving datasets...")
@@ -179,11 +181,11 @@ def isDownloadedFlagFileSet():
 	
 
 #Takes some images from the validation set and sets the aside for the test set.
-# hardcoded half test half val
-def createTestSet(val_ds):
-	val_batches = tf.data.experimental.cardinality(val_ds)
-	test_dataset = val_ds.take(val_batches // 2)
-	val_ds = val_ds.skip(val_batches // 2)
+def createTestSet(val_ds, percentageTestToVal):
+	length = tf.data.experimental.cardinality(val_ds) #THis doesn't create a number. It creates an EagerTensor. EagerTensor cannot be multiplied. I don't know how to fix this at the moment.
+	numForTest = int(length * percentageTestToVal)
+	test_dataset = val_ds.take(numForTest)
+	val_ds = val_ds.skip(numForTest)
 	
 	return val_ds, test_dataset
 
@@ -196,14 +198,18 @@ def saveDatasets(train_ds, trainDir, val_ds, valDir, test_ds, testDir):
 
 #The batching makes them get stuck together in batches. Right now that's 32 images.
 #So whenever you take one from the set, you get a batch of 32 images.
-def createAnimalsDataset(baseDirectory, img_height, img_width, batch_size):
+# percentageTrain is a decimal from 0 to 1 of the percent data that should be for train
+# percentageTestToVal is a number from 0 to 1 of the percentage of the non-train data for use as test
+def createAnimalsDataset(baseDirectory, img_height, img_width, batch_size, percentageTrain, percentageTestToVal):
+	valSplit = 1 - percentageTrain
+	
 	train_ds = tf.keras.preprocessing.image_dataset_from_directory(
 		baseDirectory,
 		labels = "inferred",
 		label_mode = "int",
 		class_names = CLASS_NAMES_LIST_STR, #must match directory names
 		color_mode = "grayscale",
-		validation_split=0.4,
+		validation_split = valSplit,
 		subset="training",
 		seed=123,
 		image_size=(img_height, img_width),
@@ -215,13 +221,13 @@ def createAnimalsDataset(baseDirectory, img_height, img_width, batch_size):
 		label_mode = "int",
 		class_names = CLASS_NAMES_LIST_STR, #must match directory names
 		color_mode = "grayscale",
-		validation_split=0.4,
+		validation_split = valSplit,
 		subset="validation",
 		seed=123,
 		image_size=(img_height, img_width),
 		batch_size=batch_size)
 
-	val_ds, test_ds = createTestSet(val_ds)
+	val_ds, test_ds = createTestSet(val_ds, percentageTestToVal)
 
 	AUTOTUNE = tf.data.AUTOTUNE
 
