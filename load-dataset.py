@@ -98,11 +98,14 @@ def main(args):
 	#Tensorflow has a global random seed and a operation level seeds: https://www.tensorflow.org/api_docs/python/tf/random/set_seed
 	
 	print("Hello! This is the Animal Crossing Dataset Loader!")
-	makeDirectories(ALL_FOLDERS_LIST)
-	checkArgs(args)
 	if not areAllProgramsInstalled():
 		print("Not all programs installed.")
 		exit(-2)
+	makeDirectories(ALL_FOLDERS_LIST)
+	checkArgs(args)
+	
+	print("Early exit for testing...")
+	exit(-3)
 
 	print("DATASET_DIRECTORY: " + str(DATASET_DIRECTORY))
 
@@ -174,10 +177,25 @@ def makeDirectories(listOfFoldersToCreate):
 
 # Retrieves the images if they're not here
 def retrieveImages():
-        print("Retrieving images...")
-        os.system("wget -e robots=off -r -np --mirror https://ftp.wsdot.wa.gov/public/I90Snoq/Biology/thermal/")
-        #note: wget2 is like ten times faster than wget
-        print("Done!")
+	print("Retrieving images...")
+	wgetTrailingString = " -e robots=off -r -np --mirror https://ftp.wsdot.wa.gov/public/I90Snoq/Biology/thermal/"
+	
+	if sys.platform.startswith("win"):
+		## call a subprocess to run the "which wget" command inside wsl
+		isWget2Installed = subprocess.check_call(["wsl", "which", "wget2"]) == 0
+		theWget = "wget"
+		if isWget2Installed:
+			theWget += "2"
+		os.system("wsl " + theWget + wgetTrailingString)
+	elif sys.platform.startswith("linux"):
+		theWget = "wget"
+		if shutil.which("wget2") is not None:
+			theWget += "2"
+		os.system(theWget + wgetTrailingString)
+	else:
+		print("MASSIVE ERROR LOL!")
+		exit(-4)
+	print("Done!")
 
 
 #Checks if a flag file is in place to determine if the dataset should download from the ftp server.
@@ -384,23 +402,27 @@ def areAllProgramsInstalled():
 	if sys.platform.startswith("win"):
 		if shutil.which("wsl") is not None:
 			## call a subprocess to run the "which wget" command inside wsl
-			print(subprocess.check_call(["wsl", "which", "wget"]))
-			print(subprocess.check_output( ["wsl", "which", "wget"] )) ##I think this one will owrk. Just check that the return value is zero.
+			a = subprocess.check_call(["wsl", "which", "wget"]) == 0
+			b = subprocess.check_call(["wsl", "which", "wget2"]) == 0
+			if a or b:
+				return True
+			else:
+				print("Missing wget or wget2")
+				return False
+		else:
+			print("Missing wsl")
 	elif sys.platform.startswith("linux"):
 		if (shutil.which("wget") is not None) or (shutil.which("wget2") is not None):
-			print("wget or wget2 detected")
-			print("firstone...")
-			a = subprocess.check_call(["which", "wget"])
-			print("a: " + str(a))
-			print("secondone...")
-			print(subprocess.check_output( ["which", "wget"] )) ##I think this one will owrk. Just check that the return value is zero.
-
-			# ~ return True ######### test comment out
+			return True
+		else:
+			print("Missing wget or wget2")
+			return False
 	else:
 		print("Unsupportd operating system! Halting!")
+		print("This os: " + str(sys.platform))
 		return False
 	
-	return False ################################################# test
+	return False
 
 
 if __name__ == '__main__':
