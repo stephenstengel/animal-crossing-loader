@@ -16,6 +16,7 @@ import skimage
 from skimage.io import imsave
 from skimage.util import img_as_uint
 import shutil
+import subprocess
 import matplotlib.pyplot as plt
 from pathlib import Path
 from tqdm import tqdm #Pretty loading bars
@@ -99,6 +100,10 @@ def main(args):
 	print("Hello! This is the Animal Crossing Dataset Loader!")
 	makeDirectories(ALL_FOLDERS_LIST)
 	checkArgs(args)
+	if not areAllProgramsInstalled():
+		print("Not all programs installed.")
+		exit(-2)
+
 	print("DATASET_DIRECTORY: " + str(DATASET_DIRECTORY))
 
 	print("Creating file structure...")
@@ -372,6 +377,30 @@ def checkArgs(args):
 
 	if shouldIRetrieveImages:
 		retrieveImages()
+
+
+## Check if all the required programs are installed
+def areAllProgramsInstalled():
+	if sys.platform.startswith("win"):
+		if shutil.which("wsl") is not None:
+			## call a subprocess to run the "which wget" command inside wsl
+			print(subprocess.check_call(["wsl", "which", "wget"]))
+			print(subprocess.check_output( ["wsl", "which", "wget"] )) ##I think this one will owrk. Just check that the return value is zero.
+	elif sys.platform.startswith("linux"):
+		if (shutil.which("wget") is not None) or (shutil.which("wget2") is not None):
+			print("wget or wget2 detected")
+			print("firstone...")
+			a = subprocess.check_call(["which", "wget"])
+			print("a: " + str(a))
+			print("secondone...")
+			print(subprocess.check_output( ["which", "wget"] )) ##I think this one will owrk. Just check that the return value is zero.
+
+			# ~ return True ######### test comment out
+	else:
+		print("Unsupportd operating system! Halting!")
+		return False
+	
+	return False ################################################# test
 
 
 if __name__ == '__main__':
