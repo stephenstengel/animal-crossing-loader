@@ -11,6 +11,7 @@
 print("Loading imports...")
 
 import os
+import random
 import skimage
 from skimage.io import imsave
 from skimage.util import img_as_uint
@@ -89,6 +90,12 @@ IS_DOWNLOAD_PICTURES = False
 
 
 def main(args):
+	random.seed()
+	rInt = random.randint(0, 2**32 - 1) ##must be between 0 and 2**32 - 1
+	print("Global level random seed: " + str(rInt))
+	tf.keras.utils.set_random_seed(rInt) #sets random, numpy, and tensorflow seeds.
+	#Tensorflow has a global random seed and a operation level seeds: https://www.tensorflow.org/api_docs/python/tf/random/set_seed
+	
 	print("Hello! This is the Animal Crossing Dataset Loader!")
 	makeDirectories(ALL_FOLDERS_LIST)
 	checkArgs(args)
@@ -137,7 +144,8 @@ def main(args):
 	print("Deleting the temporary image folder...")
 	shutil.rmtree(DATASET_COPY_FOLDER)
 	
-	os.sync()
+	if sys.platform.startswith("linux"):
+		os.sync()
 	
 	print("Done!")
 
@@ -163,6 +171,7 @@ def makeDirectories(listOfFoldersToCreate):
 def retrieveImages():
         print("Retrieving images...")
         os.system("wget -e robots=off -r -np --mirror https://ftp.wsdot.wa.gov/public/I90Snoq/Biology/thermal/")
+        #note: wget2 is like ten times faster than wget
         print("Done!")
 
 
@@ -198,6 +207,8 @@ def saveDatasets(train_ds, trainDir, val_ds, valDir, test_ds, testDir):
 # percentageTestToVal is a number from 0 to 1 of the percentage of the non-train data for use as test
 def createAnimalsDataset(baseDirectory, img_height, img_width, batch_size, percentageTrain, percentageTestToVal):
 	valSplit = 1 - percentageTrain
+	splitSeed = random.randint(0, 2**32 - 1)
+	print("Operation level random seed for image_dataset_from_directory(): " + str(splitSeed))
 	
 	train_ds = tf.keras.preprocessing.image_dataset_from_directory(
 		baseDirectory,
@@ -207,7 +218,7 @@ def createAnimalsDataset(baseDirectory, img_height, img_width, batch_size, perce
 		color_mode = "grayscale",
 		validation_split = valSplit,
 		subset="training",
-		seed=123,
+		seed = splitSeed,
 		image_size=(img_height, img_width),
 		batch_size=batch_size)
 
@@ -219,7 +230,7 @@ def createAnimalsDataset(baseDirectory, img_height, img_width, batch_size, perce
 		color_mode = "grayscale",
 		validation_split = valSplit,
 		subset="validation",
-		seed=123,
+		seed = splitSeed,
 		image_size=(img_height, img_width),
 		batch_size=batch_size)
 
