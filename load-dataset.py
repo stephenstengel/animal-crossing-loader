@@ -181,7 +181,7 @@ def retrieveImages():
 	wgetString = theWget + endWString
 	if sys.platform.startswith("win"):
 		os.system("wsl " + wgetString)
-	elif sys.platform.startswith("linux") and ("microsoft-standard" in platform.uname().release):
+	elif sys.platform.startswith("linux") and ("microsoft".lower() in platform.uname().release.lower()):
 		os.system(wgetString)
 	elif sys.platform.startswith("linux"):
 		if shutil.which("wget2") is not None:
@@ -406,7 +406,7 @@ def areAllProgramsInstalled():
 				return False
 		else:
 			print("Missing wsl")
-	elif sys.platform.startswith("linux") and ("microsoft-standard" in platform.uname().release):
+	elif sys.platform.startswith("linux") and ("microsoft".lower() in platform.uname().release.lower()):
 		if (shutil.which("wget") is not None):
 			return True
 		else:
