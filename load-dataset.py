@@ -11,6 +11,7 @@
 print("Loading imports...")
 
 import os
+import platform
 import random
 import skimage
 from skimage.io import imsave
@@ -175,11 +176,18 @@ def makeDirectories(listOfFoldersToCreate):
 # Retrieves the images if they're not here
 def retrieveImages():
 	print("Retrieving images...")
-	wgetString = "wget -e robots=off -r -np --mirror https://ftp.wsdot.wa.gov/public/I90Snoq/Biology/thermal/"
+	theWget = "wget"
+	endWString = " -e robots=off -r -np --mirror https://ftp.wsdot.wa.gov/public/I90Snoq/Biology/thermal/"
+	wgetString = theWget + endWString
 	if sys.platform.startswith("win"):
 		os.system("wsl " + wgetString)
-	elif sys.platform.startswith("linux"):
+	elif sys.platform.startswith("linux") and ("microsoft-standard" in platform.uname().release):
 		os.system(wgetString)
+	elif sys.platform.startswith("linux"):
+		if shutil.which("wget2") is not None:
+			os.system("wget2" + endWString)
+		else:
+			os.system(wgetString)
 	else:
 		print("MASSIVE ERROR LOL!")
 		exit(-4)
@@ -398,11 +406,17 @@ def areAllProgramsInstalled():
 				return False
 		else:
 			print("Missing wsl")
-	elif sys.platform.startswith("linux"):
+	elif sys.platform.startswith("linux") and ("microsoft-standard" in platform.uname().release):
 		if (shutil.which("wget") is not None):
 			return True
 		else:
 			print("Missing wget")
+			return False
+	elif sys.platform.startswith("linux"):
+		if ((shutil.which("wget") is not None) or (shutil.which("wget2") is not None)):
+			return True
+		else:
+			print("Missing wget or wget2")
 			return False
 	else:
 		print("Unsupportd operating system! Halting!")
