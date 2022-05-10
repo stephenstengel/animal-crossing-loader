@@ -178,20 +178,11 @@ def makeDirectories(listOfFoldersToCreate):
 # Retrieves the images if they're not here
 def retrieveImages():
 	print("Retrieving images...")
-	wgetTrailingString = " -e robots=off -r -np --mirror https://ftp.wsdot.wa.gov/public/I90Snoq/Biology/thermal/"
-	
+	wgetString = "wget -e robots=off -r -np --mirror https://ftp.wsdot.wa.gov/public/I90Snoq/Biology/thermal/"
 	if sys.platform.startswith("win"):
-		## call a subprocess to run the "which wget" command inside wsl
-		isWget2Installed = subprocess.check_call(["wsl", "which", "wget2"]) == 0
-		theWget = "wget"
-		if isWget2Installed:
-			theWget += "2"
-		os.system("wsl " + theWget + wgetTrailingString)
+		os.system("wsl " + wgetString)
 	elif sys.platform.startswith("linux"):
-		theWget = "wget"
-		if shutil.which("wget2") is not None:
-			theWget += "2"
-		os.system(theWget + wgetTrailingString)
+		os.system(wgetString)
 	else:
 		print("MASSIVE ERROR LOL!")
 		exit(-4)
@@ -402,20 +393,19 @@ def areAllProgramsInstalled():
 	if sys.platform.startswith("win"):
 		if shutil.which("wsl") is not None:
 			## call a subprocess to run the "which wget" command inside wsl
-			a = subprocess.check_call(["wsl", "which", "wget"]) == 0
-			b = subprocess.check_call(["wsl", "which", "wget2"]) == 0
-			if a or b:
+			isWgetInstalled = subprocess.check_call(["wsl", "which", "wget"]) == 0
+			if isWgetInstalled:
 				return True
 			else:
-				print("Missing wget or wget2")
+				print("Missing wget")
 				return False
 		else:
 			print("Missing wsl")
 	elif sys.platform.startswith("linux"):
-		if (shutil.which("wget") is not None) or (shutil.which("wget2") is not None):
+		if (shutil.which("wget") is not None):
 			return True
 		else:
-			print("Missing wget or wget2")
+			print("Missing wget")
 			return False
 	else:
 		print("Unsupportd operating system! Halting!")
