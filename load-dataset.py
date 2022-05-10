@@ -104,9 +104,6 @@ def main(args):
 	makeDirectories(ALL_FOLDERS_LIST)
 	checkArgs(args)
 	
-	print("Early exit for testing...")
-	exit(-3)
-
 	print("DATASET_DIRECTORY: " + str(DATASET_DIRECTORY))
 
 	print("Creating file structure...")
