@@ -33,3 +33,5 @@ https://stackoverflow.com/questions/44792761/how-can-i-shuffle-a-whole-dataset-w
 https://stackoverflow.com/questions/61844426/how-to-properly-shuffle-my-data-in-tensorflow
 
 https://www.tensorflow.org/tutorials/keras/save_and_load
+
+https://www.rosipov.com/blog/use-vimdiff-as-git-mergetool/
