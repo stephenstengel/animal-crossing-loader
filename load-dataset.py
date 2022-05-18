@@ -171,7 +171,7 @@ CLASS_NAMES_LIST_STR = [CLASS_BOBCAT_STRING, CLASS_COYOTE_STRING, CLASS_DEER_STR
 
 TEST_PRINTING = False
 IS_SAVE_THE_DATASETS = True
-IS_SAVE_THE_PNGS = True
+IS_SAVE_THE_PNGS = False
 IS_DOWNLOAD_PICTURES = False
 
 
@@ -275,14 +275,19 @@ def makeDirectories(listOfFoldersToCreate):
 def retrieveImages():
 	print("Retrieving images...")
 	wgetString = "wget -e robots=off -r -np --mirror https://ftp.wsdot.wa.gov/public/I90Snoq/Biology/thermal/"
+	runSystemCommand(wgetString)
+	print("Done!")
+
+
+#Runs a system command. Input is the string that would run on linux or inside wsl.
+def runSystemCommand(inputString):
 	if sys.platform.startswith("win"):
-		os.system("wsl " + wgetString)
+		os.system("wsl " + inputString)
 	elif sys.platform.startswith("linux"):
-		os.system(wgetString)
+		os.system(inputString)
 	else:
 		print("MASSIVE ERROR LOL!")
 		exit(-4)
-	print("Done!")
 
 
 #Checks if a flag file is in place to determine if the dataset should download from the ftp server.
