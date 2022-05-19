@@ -283,7 +283,9 @@ def retrieveImages():
 def runSystemCommand(inputString):
 	if sys.platform.startswith("win"):
 		theStringLol = "wsl  " + inputString
-		os.system(theStringLol)
+		print(theStringLol)
+		sysRet = os.system(theStringLol)
+		print(sysRet)
 		exit(2)
 	elif sys.platform.startswith("linux"):
 		os.system(inputString)
