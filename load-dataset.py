@@ -216,12 +216,12 @@ def main(args):
 	#These WILL change later
 	# ~ img_width = 400
 	# ~ img_height = 300
-	# ~ img_width = 200
-	# ~ img_height = 150
+	img_width = 200
+	img_height = 150
 	# ~ img_width = 100
 	# ~ img_height = 100
-	img_width = 40
-	img_height = 30
+	# ~ img_width = 40
+	# ~ img_height = 30
 	
 	batch_size = 32
 	# ~ batch_size = 16
