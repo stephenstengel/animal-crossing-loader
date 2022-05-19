@@ -282,18 +282,10 @@ def retrieveImages():
 #Runs a system command. Input is the string that would run on linux or inside wsl.
 def runSystemCommand(inputString):
 	if sys.platform.startswith("win"):
-		print("winders")
-		theStringLol = "wsl  " + inputString
-		print(theStringLol)
-		sysRet = os.system(theStringLol)
-		print(sysRet)
-		exit(2)
+		theStringLol = "wsl " + inputString
+		os.system(theStringLol)
 	elif sys.platform.startswith("linux"):
-		print("Linux")
-		sysRet = os.system(inputString)
-		print(sysRet)
-		# ~ os.system(inputString)
-		exit(3)
+		os.system(inputString)
 	else:
 		print("MASSIVE ERROR LOL!")
 		exit(-4)
