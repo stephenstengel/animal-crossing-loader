@@ -11,9 +11,9 @@
 print("Loading imports...")
 
 import os
-import platform
+import sys
+import math
 import random
-import skimage
 from skimage.io import imsave
 from skimage.util import img_as_uint
 import shutil
@@ -173,6 +173,7 @@ TEST_PRINTING = False
 IS_SAVE_THE_DATASETS = True
 IS_SAVE_THE_PNGS = False
 IS_DOWNLOAD_PICTURES = False
+IS_DUPLICATE_IMAGES = False
 
 
 def main(args):
@@ -193,16 +194,28 @@ def main(args):
 
 	print("Creating file structure...")
 	# createFileStructure(INTERESTING_DIRECTORY, DATASET_COPY_FOLDER_INT)
-	createFileStructure(INTERESTING_COYOTE_DIRECTORY, DATASET_COPY_FOLDER_COYOTE)
-	createFileStructure(INTERESTING_ELK_DIRECTORY, DATASET_COPY_FOLDER_ELK)
-	createFileStructure(INTERESTING_HUMAN_DIRECTORY, DATASET_COPY_FOLDER_HUMAN)
-	createFileStructure(INTERESTING_BOBCAT_DIRECTORY, DATASET_COPY_FOLDER_BOBCAT)
-	createFileStructure(INTERESTING_DEER_DIRECTORY, DATASET_COPY_FOLDER_DEER)
-	createFileStructure(INTERESTING_RACCOON_DIRECTORY, DATASET_COPY_FOLDER_RACCOON)
-	createFileStructure(INTERESTING_WEASEL_DIRECTORY, DATASET_COPY_FOLDER_WEASEL)
-	createFileStructure(NOT_INTERESTING_DIRECTORY, DATASET_COPY_FOLDER_NOT)
+	num_coyote = createFileStructure(INTERESTING_COYOTE_DIRECTORY, DATASET_COPY_FOLDER_COYOTE)
+	num_elk = createFileStructure(INTERESTING_ELK_DIRECTORY, DATASET_COPY_FOLDER_ELK)
+	num_human = createFileStructure(INTERESTING_HUMAN_DIRECTORY, DATASET_COPY_FOLDER_HUMAN)
+	num_bobcat = createFileStructure(INTERESTING_BOBCAT_DIRECTORY, DATASET_COPY_FOLDER_BOBCAT)
+	num_deer = createFileStructure(INTERESTING_DEER_DIRECTORY, DATASET_COPY_FOLDER_DEER)
+	num_raccoon = createFileStructure(INTERESTING_RACCOON_DIRECTORY, DATASET_COPY_FOLDER_RACCOON)
+	num_weasel = createFileStructure(INTERESTING_WEASEL_DIRECTORY, DATASET_COPY_FOLDER_WEASEL)
+	num_not = createFileStructure(NOT_INTERESTING_DIRECTORY, DATASET_COPY_FOLDER_NOT)
 	print("Done!")
-	
+
+	if IS_DUPLICATE_IMAGES:
+		nums = [num_coyote, num_elk, num_human, num_bobcat, num_deer, num_deer, num_raccoon, num_weasel, num_not]
+		max_num = max(nums)
+		duplicateImages(DATASET_COPY_FOLDER_COYOTE, max_num)
+		duplicateImages(DATASET_COPY_FOLDER_ELK, max_num)
+		duplicateImages(DATASET_COPY_FOLDER_HUMAN, max_num)
+		duplicateImages(DATASET_COPY_FOLDER_BOBCAT, max_num)
+		duplicateImages(DATASET_COPY_FOLDER_DEER, max_num)
+		duplicateImages(DATASET_COPY_FOLDER_RACCOON, max_num)
+		duplicateImages(DATASET_COPY_FOLDER_WEASEL, max_num)
+		duplicateImages(DATASET_COPY_FOLDER_NOT, max_num)
+ 
 	# interestingFNames = getListOfAnimalPicsInOneClass(DATASET_COPY_FOLDER_INT)	
 	coyoteFNames = getListOfAnimalPicsInOneClass(DATASET_COPY_FOLDER_COYOTE)
 	elkFNames = getListOfAnimalPicsInOneClass(DATASET_COPY_FOLDER_ELK)
@@ -331,8 +344,8 @@ def saveDatasets(train_ds, trainDir, val_ds, valDir, test_ds, testDir):
 def createAnimalsDataset(baseDirectory, img_height, img_width, batch_size, percentageTrain, percentageTestToVal):
 	valSplit = 1 - percentageTrain
 	splitSeed = random.randint(0, 2**32 - 1)
-	print("Operation level random seed for image_dataset_from_directory(): " + str(splitSeed))
-	
+	print("Operation level random seed for image_dataset_from_directory(): " + str(splitSeed)) 
+     
 	train_ds = tf.keras.preprocessing.image_dataset_from_directory(
 		baseDirectory,
 		labels = "inferred",
@@ -420,10 +433,6 @@ def saveDatasetAsPNG(in_ds, saveFolder):
 			
 
 def createFileStructure(baseDirSource, destination):
-	recursivelyCopyAllFilesInFolderToOneDestinationFolder(baseDirSource, destination)
-
-
-def recursivelyCopyAllFilesInFolderToOneDestinationFolder(baseDirSource, destination):
 	print("Copying files to " + str(destination))
 	cpyFiles = getListOfFilenames(baseDirSource)
 	for thisName in tqdm(cpyFiles):
@@ -431,6 +440,27 @@ def recursivelyCopyAllFilesInFolderToOneDestinationFolder(baseDirSource, destina
 			shutil.copy(thisName, destination)
 		except:
 			print("copy skipping: " + str(thisName))
+   
+	return len(cpyFiles)
+
+# duplicate images based on the maximum number of images in a class
+def duplicateImages(baseDirSource, max_num):
+	print("Duplicating files in " + baseDirSource + " if needed...")
+	cpyFiles = getListOfFilenames(baseDirSource)
+	iterations = round(max_num / len(cpyFiles), 1)
+	if int(repr(iterations)[-1]) >= 5:
+		iterations = math.ceil(iterations)
+	else:
+		iterations = math.floor(iterations)
+	
+	if iterations > 1:
+		for thisName in tqdm(cpyFiles):
+			for i in range(iterations):
+				try:
+					base, ext = os.path.splitext(thisName)
+					shutil.copy(thisName, base + str(i) + ext)
+				except:
+					print("copy skipping: " + str(thisName))
 
 
 def getListOfAnimalPicsInOneClass(classDir):
