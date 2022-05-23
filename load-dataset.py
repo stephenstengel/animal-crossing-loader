@@ -21,6 +21,7 @@ import subprocess
 import matplotlib.pyplot as plt
 from pathlib import Path
 from tqdm import tqdm #Pretty loading bars
+import math
 
 import numpy as np
 import tensorflow as tf
@@ -61,20 +62,31 @@ INTERESTING_RACCOON_DIRECTORY = os.path.join(INTERESTING_DIRECTORY, "PRLO - racc
 INTERESTING_WEASEL_DIRECTORY = os.path.join(INTERESTING_DIRECTORY, "WEAS - weasel")
 NOT_INTERESTING_DIRECTORY = os.path.join(DATASET_DIRECTORY, "not interesting")
 
-DATASET_COPY_FOLDER = os.path.normpath("./tmpdata/")
+TRAIN_DATASET_COPY_FOLDER = os.path.normpath("./tmpTrainData/")
+# TRAIN_DATASET_COPY_FOLDER_INT = os.path.join(TRAIN_DATASET_COPY_FOLDER, CLASS_INTERESTING_STRING)
+TRAIN_DATASET_COPY_FOLDER_COYOTE = os.path.join(TRAIN_DATASET_COPY_FOLDER, CLASS_COYOTE_STRING)
+TRAIN_DATASET_COPY_FOLDER_ELK = os.path.join(TRAIN_DATASET_COPY_FOLDER, CLASS_ELK_STRING)
+TRAIN_DATASET_COPY_FOLDER_HUMAN = os.path.join(TRAIN_DATASET_COPY_FOLDER, CLASS_HUMAN_STRING)
+TRAIN_DATASET_COPY_FOLDER_BOBCAT = os.path.join(TRAIN_DATASET_COPY_FOLDER, CLASS_BOBCAT_STRING)
+TRAIN_DATASET_COPY_FOLDER_DEER = os.path.join(TRAIN_DATASET_COPY_FOLDER, CLASS_DEER_STRING)
+TRAIN_DATASET_COPY_FOLDER_RACCOON = os.path.join(TRAIN_DATASET_COPY_FOLDER, CLASS_RACCOON_STRING)
+TRAIN_DATASET_COPY_FOLDER_WEASEL = os.path.join(TRAIN_DATASET_COPY_FOLDER, CLASS_WEASEL_STRING)
+TRAIN_DATASET_COPY_FOLDER_NOT = os.path.join(TRAIN_DATASET_COPY_FOLDER, CLASS_NOT_INTERESTING_STRING)
+
+TEST_DATASET_COPY_FOLDER = os.path.normpath("./tmpTestData/")
 # DATASET_COPY_FOLDER_INT = os.path.join(DATASET_COPY_FOLDER, CLASS_INTERESTING_STRING)
-DATASET_COPY_FOLDER_COYOTE = os.path.join(DATASET_COPY_FOLDER, CLASS_COYOTE_STRING)
-DATASET_COPY_FOLDER_ELK = os.path.join(DATASET_COPY_FOLDER, CLASS_ELK_STRING)
-DATASET_COPY_FOLDER_HUMAN = os.path.join(DATASET_COPY_FOLDER, CLASS_HUMAN_STRING)
-DATASET_COPY_FOLDER_BOBCAT = os.path.join(DATASET_COPY_FOLDER, CLASS_BOBCAT_STRING)
-DATASET_COPY_FOLDER_DEER = os.path.join(DATASET_COPY_FOLDER, CLASS_DEER_STRING)
-DATASET_COPY_FOLDER_RACCOON = os.path.join(DATASET_COPY_FOLDER, CLASS_RACCOON_STRING)
-DATASET_COPY_FOLDER_WEASEL = os.path.join(DATASET_COPY_FOLDER, CLASS_WEASEL_STRING)
-DATASET_COPY_FOLDER_NOT = os.path.join(DATASET_COPY_FOLDER, CLASS_NOT_INTERESTING_STRING)
+TEST_DATASET_COPY_FOLDER_COYOTE = os.path.join(TEST_DATASET_COPY_FOLDER, CLASS_COYOTE_STRING)
+TEST_DATASET_COPY_FOLDER_ELK = os.path.join(TEST_DATASET_COPY_FOLDER, CLASS_ELK_STRING)
+TEST_DATASET_COPY_FOLDER_HUMAN = os.path.join(TEST_DATASET_COPY_FOLDER, CLASS_HUMAN_STRING)
+TEST_DATASET_COPY_FOLDER_BOBCAT = os.path.join(TEST_DATASET_COPY_FOLDER, CLASS_BOBCAT_STRING)
+TEST_DATASET_COPY_FOLDER_DEER = os.path.join(TEST_DATASET_COPY_FOLDER, CLASS_DEER_STRING)
+TEST_DATASET_COPY_FOLDER_RACCOON = os.path.join(TEST_DATASET_COPY_FOLDER, CLASS_RACCOON_STRING)
+TEST_DATASET_COPY_FOLDER_WEASEL = os.path.join(TEST_DATASET_COPY_FOLDER, CLASS_WEASEL_STRING)
+TEST_DATASET_COPY_FOLDER_NOT = os.path.join(TEST_DATASET_COPY_FOLDER, CLASS_NOT_INTERESTING_STRING)
 
 DATASET_PNG_FOLDER = os.path.normpath("./datasets-as-png/")
 DATASET_PNG_FOLDER_TRAIN = os.path.join(DATASET_PNG_FOLDER, "train")
-# DATASET_PNG_FOLDER_TRAIN_INT = os.path.join(DATASET_PNG_FOLDER_TRAIN, CLASS_INTERESTING_STRING)
+# TEST_DATASET_PNG_FOLDER_TRAIN_INT = os.path.join(TEST_DATASET_PNG_FOLDER_TRAIN, CLASS_INTERESTING_STRING)
 DATASET_PNG_FOLDER_TRAIN_COYOTE = os.path.join(DATASET_PNG_FOLDER_TRAIN, CLASS_COYOTE_STRING)
 DATASET_PNG_FOLDER_TRAIN_ELK = os.path.join(DATASET_PNG_FOLDER_TRAIN, CLASS_ELK_STRING)
 DATASET_PNG_FOLDER_TRAIN_HUMAN = os.path.join(DATASET_PNG_FOLDER_TRAIN, CLASS_HUMAN_STRING)
@@ -121,15 +133,24 @@ ALL_FOLDERS_LIST = [
 		INTERESTING_RACCOON_DIRECTORY,
 		INTERESTING_WEASEL_DIRECTORY,
 		NOT_INTERESTING_DIRECTORY,
-		DATASET_COPY_FOLDER,
-		DATASET_COPY_FOLDER_COYOTE,
-		DATASET_COPY_FOLDER_ELK,
-		DATASET_COPY_FOLDER_HUMAN,
-		DATASET_COPY_FOLDER_BOBCAT,
-		DATASET_COPY_FOLDER_DEER,
-		DATASET_COPY_FOLDER_RACCOON,
-		DATASET_COPY_FOLDER_WEASEL,
-		DATASET_COPY_FOLDER_NOT,
+  		TRAIN_DATASET_COPY_FOLDER,
+		TRAIN_DATASET_COPY_FOLDER_COYOTE,
+		TRAIN_DATASET_COPY_FOLDER_ELK,
+		TRAIN_DATASET_COPY_FOLDER_HUMAN,
+		TRAIN_DATASET_COPY_FOLDER_BOBCAT,
+		TRAIN_DATASET_COPY_FOLDER_DEER,
+		TRAIN_DATASET_COPY_FOLDER_RACCOON,
+		TRAIN_DATASET_COPY_FOLDER_WEASEL,
+		TRAIN_DATASET_COPY_FOLDER_NOT,
+		TEST_DATASET_COPY_FOLDER,
+		TEST_DATASET_COPY_FOLDER_COYOTE,
+		TEST_DATASET_COPY_FOLDER_ELK,
+		TEST_DATASET_COPY_FOLDER_HUMAN,
+		TEST_DATASET_COPY_FOLDER_BOBCAT,
+		TEST_DATASET_COPY_FOLDER_DEER,
+		TEST_DATASET_COPY_FOLDER_RACCOON,
+		TEST_DATASET_COPY_FOLDER_WEASEL,
+		TEST_DATASET_COPY_FOLDER_NOT,
 		DATASET_PNG_FOLDER,
 		DATASET_PNG_FOLDER_TRAIN,
 		DATASET_PNG_FOLDER_TRAIN_COYOTE,
@@ -173,6 +194,7 @@ TEST_PRINTING = False
 IS_SAVE_THE_DATASETS = True
 IS_SAVE_THE_PNGS = False
 IS_DOWNLOAD_PICTURES = False
+IS_DUPLICATE_IMAGES = False
 
 
 def main(args):
@@ -192,32 +214,44 @@ def main(args):
 	print("DATASET_DIRECTORY: " + str(DATASET_DIRECTORY))
 
 	print("Creating file structure...")
-	# createFileStructure(INTERESTING_DIRECTORY, DATASET_COPY_FOLDER_INT)
-	createFileStructure(INTERESTING_COYOTE_DIRECTORY, DATASET_COPY_FOLDER_COYOTE)
-	createFileStructure(INTERESTING_ELK_DIRECTORY, DATASET_COPY_FOLDER_ELK)
-	createFileStructure(INTERESTING_HUMAN_DIRECTORY, DATASET_COPY_FOLDER_HUMAN)
-	createFileStructure(INTERESTING_BOBCAT_DIRECTORY, DATASET_COPY_FOLDER_BOBCAT)
-	createFileStructure(INTERESTING_DEER_DIRECTORY, DATASET_COPY_FOLDER_DEER)
-	createFileStructure(INTERESTING_RACCOON_DIRECTORY, DATASET_COPY_FOLDER_RACCOON)
-	createFileStructure(INTERESTING_WEASEL_DIRECTORY, DATASET_COPY_FOLDER_WEASEL)
-	createFileStructure(NOT_INTERESTING_DIRECTORY, DATASET_COPY_FOLDER_NOT)
+	num_coyote = createFileStructure(INTERESTING_COYOTE_DIRECTORY, TRAIN_DATASET_COPY_FOLDER_COYOTE)
+	num_elk = createFileStructure(INTERESTING_ELK_DIRECTORY, TRAIN_DATASET_COPY_FOLDER_ELK)
+	num_human = createFileStructure(INTERESTING_HUMAN_DIRECTORY, TRAIN_DATASET_COPY_FOLDER_HUMAN)
+	num_bobcat = createFileStructure(INTERESTING_BOBCAT_DIRECTORY, TRAIN_DATASET_COPY_FOLDER_BOBCAT)
+	num_deer = createFileStructure(INTERESTING_DEER_DIRECTORY, TRAIN_DATASET_COPY_FOLDER_DEER)
+	num_raccoon = createFileStructure(INTERESTING_RACCOON_DIRECTORY, TRAIN_DATASET_COPY_FOLDER_RACCOON)
+	num_weasel = createFileStructure(INTERESTING_WEASEL_DIRECTORY, TRAIN_DATASET_COPY_FOLDER_WEASEL)
+	num_not = createFileStructure(NOT_INTERESTING_DIRECTORY, TRAIN_DATASET_COPY_FOLDER_NOT)
+	print("Done!")
+
+	if IS_DUPLICATE_IMAGES:
+		nums = [num_coyote, num_elk, num_human, num_bobcat, num_deer, num_deer, num_raccoon, num_weasel, num_not]
+		max_num = max(nums)
+		duplicateImages(TRAIN_DATASET_COPY_FOLDER_COYOTE, max_num)
+		duplicateImages(TRAIN_DATASET_COPY_FOLDER_ELK, max_num)
+		duplicateImages(TRAIN_DATASET_COPY_FOLDER_HUMAN, max_num)
+		duplicateImages(TRAIN_DATASET_COPY_FOLDER_BOBCAT, max_num)
+		duplicateImages(TRAIN_DATASET_COPY_FOLDER_DEER, max_num)
+		duplicateImages(TRAIN_DATASET_COPY_FOLDER_RACCOON, max_num)
+		duplicateImages(TRAIN_DATASET_COPY_FOLDER_WEASEL, max_num)
+		duplicateImages(TRAIN_DATASET_COPY_FOLDER_NOT, max_num)
 	print("Done!")
 	
 	# interestingFNames = getListOfAnimalPicsInOneClass(DATASET_COPY_FOLDER_INT)	
-	coyoteFNames = getListOfAnimalPicsInOneClass(DATASET_COPY_FOLDER_COYOTE)
-	elkFNames = getListOfAnimalPicsInOneClass(DATASET_COPY_FOLDER_ELK)
-	humanFNames = getListOfAnimalPicsInOneClass(DATASET_COPY_FOLDER_HUMAN)
-	bobcatFNames = getListOfAnimalPicsInOneClass(DATASET_COPY_FOLDER_BOBCAT)
-	deerFNames = getListOfAnimalPicsInOneClass(DATASET_COPY_FOLDER_DEER)
-	raccoonFNames = getListOfAnimalPicsInOneClass(DATASET_COPY_FOLDER_RACCOON)
-	weaselFNames = getListOfAnimalPicsInOneClass(DATASET_COPY_FOLDER_WEASEL)
-	notInterestingFNames = getListOfAnimalPicsInOneClass(DATASET_COPY_FOLDER_NOT)
+	coyoteFNames = getListOfAnimalPicsInOneClass(TRAIN_DATASET_COPY_FOLDER_COYOTE)
+	elkFNames = getListOfAnimalPicsInOneClass(TRAIN_DATASET_COPY_FOLDER_ELK)
+	humanFNames = getListOfAnimalPicsInOneClass(TRAIN_DATASET_COPY_FOLDER_HUMAN)
+	bobcatFNames = getListOfAnimalPicsInOneClass(TRAIN_DATASET_COPY_FOLDER_BOBCAT)
+	deerFNames = getListOfAnimalPicsInOneClass(TRAIN_DATASET_COPY_FOLDER_DEER)
+	raccoonFNames = getListOfAnimalPicsInOneClass(TRAIN_DATASET_COPY_FOLDER_RACCOON)
+	weaselFNames = getListOfAnimalPicsInOneClass(TRAIN_DATASET_COPY_FOLDER_WEASEL)
+	notInterestingFNames = getListOfAnimalPicsInOneClass(TRAIN_DATASET_COPY_FOLDER_NOT)
 	
 	#These WILL change later
-	# ~ img_width = 400
-	# ~ img_height = 300
-	img_width = 200
-	img_height = 150
+	img_width = 400
+	img_height = 300
+	# ~ img_width = 200
+	# ~ img_height = 150
 	# ~ img_width = 100
 	# ~ img_height = 100
 	# ~ img_width = 40
@@ -226,12 +260,14 @@ def main(args):
 	batch_size = 32
 	# ~ batch_size = 16
 	
-	percentageTrain = 0.6
-	percentageTestToVal = 0.75
+	# 60% train, 10% validation, 30% test
+	percentageTest = 0.3
+	percentageValToTrain = 0.15
 
 	print("creating the datasets...")
+	trainTestSplit(TRAIN_DATASET_COPY_FOLDER, TEST_DATASET_COPY_FOLDER, percentageTest)
 	train_ds, val_ds, test_ds = createAnimalsDataset(
-			DATASET_COPY_FOLDER, img_height, img_width, batch_size, percentageTrain, percentageTestToVal)
+			TRAIN_DATASET_COPY_FOLDER, TEST_DATASET_COPY_FOLDER, img_height, img_width, batch_size, percentageValToTrain)
 	print("Done!")
 	
 	print("Saving datasets...")
@@ -252,8 +288,9 @@ def main(args):
 	else:
 		print("PNG saving disabled for now!")
 
-	print("Deleting the temporary image folder...")
-	shutil.rmtree(DATASET_COPY_FOLDER)
+	print("Deleting the temporary image folders...")
+	shutil.rmtree(TRAIN_DATASET_COPY_FOLDER)
+	shutil.rmtree(TEST_DATASET_COPY_FOLDER)
 	
 	if sys.platform.startswith("linux"):
 		os.sync()
@@ -270,8 +307,10 @@ def makeDirectories(listOfFoldersToCreate):
 		shutil.rmtree(DATASET_SAVE_DIR, ignore_errors = True)
 	if os.path.isdir(DATASET_PNG_FOLDER):
 		shutil.rmtree(DATASET_PNG_FOLDER, ignore_errors = True)
-	if os.path.isdir(DATASET_COPY_FOLDER):
-		shutil.rmtree(DATASET_COPY_FOLDER, ignore_errors = True)
+	if os.path.isdir(TRAIN_DATASET_COPY_FOLDER):
+		shutil.rmtree(TRAIN_DATASET_COPY_FOLDER, ignore_errors = True)
+	if os.path.isdir(TEST_DATASET_COPY_FOLDER):
+		shutil.rmtree(TEST_DATASET_COPY_FOLDER, ignore_errors = True)
 	
 	for folder in listOfFoldersToCreate:
 		if not os.path.isdir(folder):
@@ -302,20 +341,9 @@ def runSystemCommand(inputString):
 def isDownloadedFlagFileSet():
 	if not os.path.isfile(HIDDEN_DOWNLOAD_FLAG_FILE):
 		Path(HIDDEN_DOWNLOAD_FLAG_FILE).touch(exist_ok=True)
-
 		return False
 	
 	return True
-	
-
-#Takes some images from the validation set and sets the aside for the test set.
-def createTestSet(val_ds, percentageTestToVal):
-	length = np.asarray(val_ds.cardinality())
-	numForTest = int(length * percentageTestToVal)
-	test_dataset = val_ds.take(numForTest)
-	val_ds = val_ds.skip(numForTest)
-	
-	return val_ds, test_dataset
 
 
 def saveDatasets(train_ds, trainDir, val_ds, valDir, test_ds, testDir):
@@ -324,40 +352,58 @@ def saveDatasets(train_ds, trainDir, val_ds, valDir, test_ds, testDir):
 	tf.data.experimental.save(test_ds, testDir)
 
 
-#The batching makes them get stuck together in batches. Right now that's 32 images.
-#So whenever you take one from the set, you get a batch of 32 images.
+# split images into training and testing
+def trainTestSplit(trainDirectory, testDirectory, percentageTest):
+	trainDirNames = getListOfDirNames(trainDirectory)
+	testDirNames = getListOfDirNames(testDirectory)
+	for i in range(len(trainDirNames)):
+		imgs = getListOfFilenames(trainDirNames[i])
+		numForTest = int(len(imgs) * percentageTest)
+		for j in range(numForTest):
+			shutil.move(imgs[j], testDirNames[i])
+  		
+
+# The batching makes them get stuck together in batches. Right now that's 32 images.
+# So whenever you take one from the set, you get a batch of 32 images.
 # percentageTrain is a decimal from 0 to 1 of the percent data that should be for train
 # percentageTestToVal is a number from 0 to 1 of the percentage of the non-train data for use as test
-def createAnimalsDataset(baseDirectory, img_height, img_width, batch_size, percentageTrain, percentageTestToVal):
-	valSplit = 1 - percentageTrain
+def createAnimalsDataset(trainDirectory, testDirectory, img_height, img_width, batch_size, percentageValToTrain):
 	splitSeed = random.randint(0, 2**32 - 1)
 	print("Operation level random seed for image_dataset_from_directory(): " + str(splitSeed))
 	
 	train_ds = tf.keras.preprocessing.image_dataset_from_directory(
-		baseDirectory,
+		trainDirectory,
 		labels = "inferred",
 		label_mode = "int",
 		class_names = CLASS_NAMES_LIST_STR, #must match directory names
 		color_mode = "rgb",
-		validation_split = valSplit,
+		validation_split = percentageValToTrain,
 		subset="training",
 		seed = splitSeed,
 		image_size=(img_height, img_width),
 		batch_size=batch_size)
 
 	val_ds = tf.keras.preprocessing.image_dataset_from_directory(
-		baseDirectory,
+		trainDirectory,
 		labels = "inferred",
 		label_mode = "int",
 		class_names = CLASS_NAMES_LIST_STR, #must match directory names
 		color_mode = "rgb",
-		validation_split = valSplit,
+		validation_split = percentageValToTrain,
 		subset="validation",
 		seed = splitSeed,
 		image_size=(img_height, img_width),
 		batch_size=batch_size)
 
-	val_ds, test_ds = createTestSet(val_ds, percentageTestToVal)
+	test_ds = tf.keras.preprocessing.image_dataset_from_directory(
+		testDirectory,
+		labels = "inferred",
+		label_mode = "int",
+		class_names = CLASS_NAMES_LIST_STR, # must match directory names
+		color_mode = "rgb",
+		seed = splitSeed,
+		image_size=(img_height, img_width),
+		batch_size=batch_size)
 
 	AUTOTUNE = tf.data.AUTOTUNE
 
@@ -404,7 +450,7 @@ def printSample(in_ds):
 		plt.show()
 
 
-#save all images from dataset to file as png
+# save all images from dataset to file as png
 def saveDatasetAsPNG(in_ds, saveFolder):
 	i = 0
 	for batch in tqdm(in_ds):
@@ -427,10 +473,35 @@ def recursivelyCopyAllFilesInFolderToOneDestinationFolder(baseDirSource, destina
 	print("Copying files to " + str(destination))
 	cpyFiles = getListOfFilenames(baseDirSource)
 	for thisName in tqdm(cpyFiles):
-		try:
-			shutil.copy(thisName, destination)
-		except:
-			print("copy skipping: " + str(thisName))
+		_, ext = os.path.splitext(thisName)
+		if ext == '.jpg' or ext == '.jpeg':
+			try:
+				shutil.copy(thisName, destination)
+			except:
+				print("copy skipping: " + str(thisName))
+   
+	return len(cpyFiles)
+
+
+# duplicate images based on the maximum number of images in a class
+def duplicateImages(baseDirSource, max_num):
+	print("Duplicating files in " + baseDirSource + " if needed...")
+	cpyFiles = getListOfFilenames(baseDirSource)
+	iterations = round(max_num / len(cpyFiles), 1)
+	if int(repr(iterations)[-1]) >= 5:
+		iterations = math.ceil(iterations)
+	else:
+		iterations = math.floor(iterations)
+	
+	if iterations > 1:
+		for thisName in tqdm(cpyFiles):
+			base, ext = os.path.splitext(thisName)
+			if ext == '.jpg' or ext == '.jpeg':
+				for i in range(iterations):
+					try:
+						shutil.copy(thisName, base + str(i) + ext)
+					except:
+						print("copy skipping: " + str(thisName))
 
 
 def getListOfAnimalPicsInOneClass(classDir):
@@ -451,15 +522,15 @@ def getCuratedListOfFileNames(directoryName):
 
 def keepOnlyJPG(inList):
 	for thingy in inList:
-		pathParts = os.path.splitext(thingy)
-		if pathParts[-1].lower() != ".jpg" and pathParts[-1].lower() != ".jpeg":
+		_, ext = os.path.splitext(thingy)
+		if ext != ".jpg" and ext != ".jpeg":
 			print("excluding non-jpg!: " + str(thingy))
 			inList.remove(thingy)
 	
 	return inList
 
 
-#Returns a list of filenames from the input directory
+# Returns a list of filenames from the input directory
 def getListOfFilenames(baseDirectory):
 	myNames = []
 	for (root, dirNames, fileNames) in os.walk(baseDirectory):
@@ -469,7 +540,7 @@ def getListOfFilenames(baseDirectory):
 	return myNames
 
 
-#Returns a list of dirnames from the base
+# Returns a list of dirnames from the base
 def getListOfDirNames(baseDirectory):
 	myNames = []
 	for (root, dirNames, fileNames) in os.walk(baseDirectory):
@@ -497,7 +568,7 @@ def checkArgs(args):
 		retrieveImages()
 
 
-## Check if all the required programs are installed
+# Check if all the required programs are installed
 def areAllProgramsInstalled():
 	if sys.platform.startswith("win"):
 		if shutil.which("wsl") is not None:
