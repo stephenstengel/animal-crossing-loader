@@ -11,9 +11,7 @@
 print("Loading imports...")
 
 import os
-import platform
 import random
-import skimage
 from skimage.io import imsave
 from skimage.util import img_as_uint
 import shutil
@@ -194,7 +192,7 @@ TEST_PRINTING = False
 IS_SAVE_THE_DATASETS = True
 IS_SAVE_THE_PNGS = False
 IS_DOWNLOAD_PICTURES = False
-IS_DUPLICATE_IMAGES = False
+IS_DUPLICATE_IMAGES = True
 
 
 def main(args):
@@ -260,9 +258,9 @@ def main(args):
 	batch_size = 32
 	# ~ batch_size = 16
 	
-	# 60% train, 10% validation, 30% test
-	percentageTest = 0.3
-	percentageValToTrain = 0.15
+	# 60% train, 20% validation, 20% test
+	percentageTest = 0.2
+	percentageValToTrain = 0.25
 
 	print("creating the datasets...")
 	trainTestSplit(TRAIN_DATASET_COPY_FOLDER, TEST_DATASET_COPY_FOLDER, percentageTest)
@@ -359,6 +357,7 @@ def trainTestSplit(trainDirectory, testDirectory, percentageTest):
 	for i in range(len(trainDirNames)):
 		imgs = getListOfFilenames(trainDirNames[i])
 		numForTest = int(len(imgs) * percentageTest)
+		random.shuffle(imgs)
 		for j in range(numForTest):
 			shutil.move(imgs[j], testDirNames[i])
   		
@@ -466,10 +465,6 @@ def saveDatasetAsPNG(in_ds, saveFolder):
 			
 
 def createFileStructure(baseDirSource, destination):
-	recursivelyCopyAllFilesInFolderToOneDestinationFolder(baseDirSource, destination)
-
-
-def recursivelyCopyAllFilesInFolderToOneDestinationFolder(baseDirSource, destination):
 	print("Copying files to " + str(destination))
 	cpyFiles = getListOfFilenames(baseDirSource)
 	for thisName in tqdm(cpyFiles):
@@ -487,19 +482,19 @@ def recursivelyCopyAllFilesInFolderToOneDestinationFolder(baseDirSource, destina
 def duplicateImages(baseDirSource, max_num):
 	print("Duplicating files in " + baseDirSource + " if needed...")
 	cpyFiles = getListOfFilenames(baseDirSource)
-	iterations = round(max_num / len(cpyFiles), 1)
-	if int(repr(iterations)[-1]) >= 5:
-		iterations = math.ceil(iterations)
-	else:
-		iterations = math.floor(iterations)
-	
+	iterations = math.ceil(max_num / len(cpyFiles))
+	curentNum = len(cpyFiles)
 	if iterations > 1:
 		for thisName in tqdm(cpyFiles):
 			base, ext = os.path.splitext(thisName)
 			if ext == '.jpg' or ext == '.jpeg':
 				for i in range(iterations):
 					try:
-						shutil.copy(thisName, base + str(i) + ext)
+						if curentNum < max_num:
+							shutil.copy(thisName, base + str(i) + ext)
+							curentNum += 1
+						else:
+							return
 					except:
 						print("copy skipping: " + str(thisName))
 
