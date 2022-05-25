@@ -415,10 +415,12 @@ def createAnimalsDataset(trainDirectory, testDirectory, img_height, img_width, b
 	flippyBoy = tf.keras.layers.experimental.preprocessing.RandomFlip("horizontal")
 	train_ds = train_ds.map(lambda x, y: (flippyBoy(x), y),  num_parallel_calls=AUTOTUNE)
 	val_ds = val_ds.map(lambda x, y: (flippyBoy(x), y),  num_parallel_calls=AUTOTUNE)
+	test_ds = test_ds.map(lambda x, y: (flippyBoy(x), y),  num_parallel_calls=AUTOTUNE)
 
 	myRotate = tf.keras.layers.experimental.preprocessing.RandomRotation(0.2)
 	train_ds = train_ds.map(lambda x, y: (myRotate(x), y),  num_parallel_calls=AUTOTUNE)
 	val_ds = val_ds.map(lambda x, y: (myRotate(x), y),  num_parallel_calls=AUTOTUNE)
+	test_ds = test_ds.map(lambda x, y: (myRotate(x), y),  num_parallel_calls=AUTOTUNE)
 
 	train_ds = train_ds.prefetch(buffer_size=AUTOTUNE)
 	val_ds = val_ds.prefetch(buffer_size=AUTOTUNE)
