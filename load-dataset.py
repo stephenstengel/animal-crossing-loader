@@ -232,7 +232,7 @@ def main(args):
 	# only duplicate training
 	if IS_DUPLICATE_IMAGES:
 		nums = [num_coyote, num_elk, num_human, num_bobcat, num_deer, num_deer, num_raccoon, num_weasel, num_not]
-		max_num = max(nums)
+		max_num = round(max(nums) *  (1 - PERCENTAGE_TEST))
 		duplicateImages(TRAIN_DATASET_COPY_FOLDER_COYOTE, max_num)
 		duplicateImages(TRAIN_DATASET_COPY_FOLDER_ELK, max_num)
 		duplicateImages(TRAIN_DATASET_COPY_FOLDER_HUMAN, max_num)
@@ -418,12 +418,14 @@ def createAnimalsDataset(trainDirectory, testDirectory, img_height, img_width, b
 	flippyBoy = tf.keras.layers.experimental.preprocessing.RandomFlip("horizontal")
 	train_ds = train_ds.map(lambda x, y: (flippyBoy(x), y),  num_parallel_calls=AUTOTUNE)
 	val_ds = val_ds.map(lambda x, y: (flippyBoy(x), y),  num_parallel_calls=AUTOTUNE)
-	test_ds = test_ds.map(lambda x, y: (flippyBoy(x), y),  num_parallel_calls=AUTOTUNE)
 
-	myRotate = tf.keras.layers.experimental.preprocessing.RandomRotation(0.2)
+	myRotate = tf.keras.layers.experimental.preprocessing.RandomRotation(0.028)
 	train_ds = train_ds.map(lambda x, y: (myRotate(x), y),  num_parallel_calls=AUTOTUNE)
 	val_ds = val_ds.map(lambda x, y: (myRotate(x), y),  num_parallel_calls=AUTOTUNE)
-	test_ds = test_ds.map(lambda x, y: (myRotate(x), y),  num_parallel_calls=AUTOTUNE)
+ 
+	myTranslation = tf.keras.layers.experimental.preprocessing.RandomTranslation(height_factor=0.1, width_factor=0.1, fill_mode='wrap')
+	train_ds = train_ds.map(lambda x, y: (myTranslation(x), y),  num_parallel_calls=AUTOTUNE)
+	val_ds = val_ds.map(lambda x, y: (myTranslation(x), y),  num_parallel_calls=AUTOTUNE)
 
 	train_ds = train_ds.prefetch(buffer_size=AUTOTUNE)
 	val_ds = val_ds.prefetch(buffer_size=AUTOTUNE)
@@ -487,19 +489,14 @@ def createFileStructure(baseDirSource, destination):
 def duplicateImages(baseDirSource, max_num):
 	print("Duplicating files in " + baseDirSource + " if needed...")
 	cpyFiles = getListOfFilenames(baseDirSource)
-	iterations = math.ceil(max_num / len(cpyFiles))
-	curentNum = len(cpyFiles)
+	iterations = math.floor(max_num / len(cpyFiles))
 	if iterations > 1:
 		for thisName in tqdm(cpyFiles):
 			base, ext = os.path.splitext(thisName)
 			if ext == '.jpg' or ext == '.jpeg':
 				for i in range(iterations):
 					try:
-						if curentNum < max_num:
-							shutil.copy(thisName, base + str(i) + ext)
-							curentNum += 1
-						else:
-							return
+						shutil.copy(thisName, base + str(i) + ext)
 					except:
 						print("copy skipping: " + str(thisName))
 
