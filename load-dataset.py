@@ -194,6 +194,10 @@ IS_SAVE_THE_PNGS = False
 IS_DOWNLOAD_PICTURES = False
 IS_DUPLICATE_IMAGES = True
 
+# 60% train, 20% validation, 20% test
+PERCENTAGE_TEST = 0.2
+PERCENTAGE_VAL_FROM_TRAIN = 0.25
+
 
 def main(args):
 	random.seed()
@@ -222,6 +226,10 @@ def main(args):
 	num_not = createFileStructure(NOT_INTERESTING_DIRECTORY, TRAIN_DATASET_COPY_FOLDER_NOT)
 	print("Done!")
 
+	# split into training and testing
+	trainTestSplit(TRAIN_DATASET_COPY_FOLDER, TEST_DATASET_COPY_FOLDER, PERCENTAGE_TEST)
+
+	# only duplicate training
 	if IS_DUPLICATE_IMAGES:
 		nums = [num_coyote, num_elk, num_human, num_bobcat, num_deer, num_deer, num_raccoon, num_weasel, num_not]
 		max_num = max(nums)
@@ -257,15 +265,10 @@ def main(args):
 	
 	batch_size = 32
 	# ~ batch_size = 16
-	
-	# 60% train, 20% validation, 20% test
-	percentageTest = 0.2
-	percentageValToTrain = 0.25
 
 	print("creating the datasets...")
-	trainTestSplit(TRAIN_DATASET_COPY_FOLDER, TEST_DATASET_COPY_FOLDER, percentageTest)
 	train_ds, val_ds, test_ds = createAnimalsDataset(
-			TRAIN_DATASET_COPY_FOLDER, TEST_DATASET_COPY_FOLDER, img_height, img_width, batch_size, percentageValToTrain)
+			TRAIN_DATASET_COPY_FOLDER, TEST_DATASET_COPY_FOLDER, img_height, img_width, batch_size, PERCENTAGE_VAL_FROM_TRAIN)
 	print("Done!")
 	
 	print("Saving datasets...")
